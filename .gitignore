@@ -1,0 +1,41 @@
+# --- Build output (regenerado por `dotnet build` / `dotnet test`) ---
+bin/
+obj/
+
+# --- Pacote de distribuição gerado (será regenerado pelo build das edições) ---
+dist/
+
+# --- Backups manuais e recuperações antigas (substituídos pelo git) ---
+_backup_*/
+_stray_recovered/
+
+# --- Traduções: por enquanto ficam FORA do repo ---
+# Em runtime elas vivem em BepInEx/plugins/translations. Esta cópia local é
+# antiga e divergente. Será decidida/reintroduzida na etapa de merge/sync.
+/translations/
+
+# --- Outro mod que já morou nesta pasta (projeto independente) ---
+fury_mod/
+
+# --- Arquivos gerados pelo próprio mod / pelas ferramentas de tradução ---
+*.bak
+*.bak_*
+_capture/
+_scan_debug.txt
+_enforce_probe.txt
+_manifest.local.json
+.sync/
+
+# --- Segredos: NUNCA versionar (token do GitHub, chaves de API) ---
+*.token
+*.secret
+.env
+.env.*
+
+# --- IDE / ferramentas locais ---
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+.claude/

@@ -1,0 +1,109 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    Projeto de testes automatizados para a LÓGICA PURA do mod (parsing,
+    merge de camadas, normalização de placeholders, filtro/seleção da GUI,
+    orquestração de auto-tradução). NÃO cobre a construção de UI do Unity
+    em si (GameObject/Button/InputField/Text) — isso exige um Editor/Player
+    Unity de verdade rodando e continua dependendo de teste manual em jogo,
+    como sempre foi. Ver docs/TECHNICAL_DEBT.md #12.
+
+    Referencia o projeto principal via ProjectReference (reaproveita o
+    mesmo código compilado, sem duplicar) e as MESMAS DLLs do Unity/BepInEx
+    usadas por ele — aqui com Private=true (copiadas para a pasta de saída
+    do teste) porque, ao contrário do plugin em jogo, aqui não há um
+    processo BepInEx/Unity já rodando para fornecer essas assemblies em
+    memória.
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>AQWMod.Localization.Tests</AssemblyName>
+    <RootNamespace>AQWMod.Localization.Tests</RootNamespace>
+    <IsPackable>false</IsPackable>
+    <NoWarn>CS8601;CS8602;CS8600;CS8620;CS0184</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GameRoot>$(MSBuildProjectDirectory)\..\..</GameRoot>
+    <ManagedDir>$(GameRoot)\AdventureQuest Worlds Infinity_Data\Managed</ManagedDir>
+    <BepInExCore>$(GameRoot)\BepInEx\core</BepInExCore>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Pacote oficial, não o Newtonsoft.Json.dll empacotado pelo Unity —
+         mesma identidade de assembly (Version=13.0.0.0,
+         PublicKeyToken=30ad4fe6b2a6aeed), mas com assinatura forte que o
+         .NET Framework valida sem erro fora do processo do jogo. O DLL do
+         Unity falha em LoadFrom com "Falha na validação de nome forte"
+         quando carregado standalone (confirmado via reflection) — não é
+         corrupção, é como o Unity empacota; resolver via `sn -Vr` mexeria em
+         configuração de segurança da máquina, então preferimos trocar só a
+         referência deste projeto de teste. -->
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\translation_mod.csproj" />
+  </ItemGroup>
+
+  <!-- Mesmas assemblies do Unity/BepInEx que o plugin referencia, mas
+       COPIADAS para a pasta de saída (Private=true) — o processo de teste
+       precisa resolvê-las fisicamente em disco, já que não há BepInEx/Unity
+       já carregado como no jogo. Nenhum teste chama comportamento real do
+       Unity (nada de GameObject/Transform ativo) — só precisamos que os
+       TIPOS (TMP_Text, UnityEngine.UI.Text, etc.) sejam resolvíveis, porque
+       alguns campos estáticos de TMPTextPatch são tipados com eles. -->
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExCore)\BepInEx.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExCore)\0Harmony.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="TMPro">
+      <HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(ManagedDir)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(ManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(ManagedDir)\UnityEngine.UIModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+</Project>

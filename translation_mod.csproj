@@ -1,0 +1,118 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>AQWTranslation</AssemblyName>
+    <RootNamespace>AQWMod.Localization</RootNamespace>
+    <Optimize>true</Optimize>
+    <NoWarn>CS8601;CS8602;CS8600;CS8620;CS0184</NoWarn>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <GameRoot>$(MSBuildProjectDirectory)\..</GameRoot>
+    <ManagedDir>$(GameRoot)\AdventureQuest Worlds Infinity_Data\Managed</ManagedDir>
+    <BepInExCore>$(GameRoot)\BepInEx\core</BepInExCore>
+    <BepInExPlugins>$(GameRoot)\BepInEx\plugins</BepInExPlugins>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BepInEx">
+      <HintPath>$(BepInExCore)\BepInEx.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="0Harmony">
+      <HintPath>$(BepInExCore)\0Harmony.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(ManagedDir)\UnityEngine.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(ManagedDir)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="TMPro">
+      <HintPath>$(ManagedDir)\Unity.TextMeshPro.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UI">
+      <HintPath>$(ManagedDir)\UnityEngine.UI.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>$(ManagedDir)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.InputLegacyModule">
+      <HintPath>$(ManagedDir)\UnityEngine.InputLegacyModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>$(ManagedDir)\UnityEngine.TextRenderingModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="UnityEngine.UIModule">
+      <HintPath>$(ManagedDir)\UnityEngine.UIModule.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(ManagedDir)\Newtonsoft.Json.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+    <!-- Parte do .NET Framework 4.8 — sem HintPath, resolvida pelas
+         assemblies de referência do SDK (usada pelo provedor de tradução
+         automática, Fase 5, para chamadas HTTP assíncronas). -->
+    <Reference Include="System.Net.Http" />
+  </ItemGroup>
+
+  <!-- Copia DLL compilada para BepInEx/plugins automaticamente -->
+  <Target Name="DeployPlugin" AfterTargets="Build">
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+          DestinationFolder="$(BepInExPlugins)"
+          SkipUnchangedFiles="true" />
+    <Message Text="[Deploy] $(AssemblyName).dll copiado para $(BepInExPlugins)" Importance="high" />
+  </Target>
+
+  <!-- Exclui pastas de backup e o projeto de testes do build do plugin
+       (evita definições de tipo duplicadas e não injeta xUnit/Test SDK
+       no DLL que vai pro BepInEx/plugins). -->
+  <ItemGroup>
+    <Compile Remove="_backup_*\**\*.cs" />
+    <None    Remove="_backup_*\**\*" />
+    <Compile Remove="Tests\**\*.cs" />
+    <None    Remove="Tests\**\*" />
+  </ItemGroup>
+
+  <!-- fury_mod/ é OUTRO mod (própria .csproj, própria AssemblyName) que
+       mora dentro desta mesma pasta — quando ele é compilado
+       independentemente, gera seu PRÓPRIO obj/Debug/net48 com seu
+       PRÓPRIO AssemblyInfo.cs. O glob padrão do SDK (**/*.cs) só exclui
+       automaticamente o bin/obj do PRÓPRIO projeto (translation_mod), não
+       o de um subprojeto aninhado — sem esta exclusão, esses arquivos
+       gerados do fury_mod entravam junto na compilação deste projeto e
+       colidiam com os atributos de assembly gerados aqui (erro real,
+       2026-09-22: "CS0579: Duplicar atributo AssemblyCompanyAttribute"
+       e outros, todos vindos de fury_mod\obj\...\AssemblyInfo.cs).
+       Padrão genérico (**\obj\**, **\bin\**) também protege contra
+       qualquer outro subprojeto futuro com o mesmo problema. -->
+  <ItemGroup>
+    <Compile Remove="fury_mod\obj\**\*.cs" />
+    <None    Remove="fury_mod\obj\**\*" />
+    <Compile Remove="fury_mod\bin\**\*.cs" />
+    <None    Remove="fury_mod\bin\**\*" />
+    <Compile Remove="**\obj\**\*.cs" />
+    <None    Remove="**\obj\**\*" />
+  </ItemGroup>
+
+  <!-- Expõe classes/membros internal para o projeto de testes (Tests/) —
+       cobre EntryRowFilter, SelectionState, e os helpers estáticos internos
+       de normalização em TMPTextPatch (NormalizeNumbers/RestoreNumbers/etc.). -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="AQWMod.Localization.Tests" />
+  </ItemGroup>
+
+</Project>
