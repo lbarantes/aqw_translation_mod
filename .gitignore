@@ -24,7 +24,7 @@ _capture/
 _scan_debug.txt
 _enforce_probe.txt
 _manifest.local.json
-.sync/
+_sync/
 
 # --- Segredos: NUNCA versionar (token do GitHub, chaves de API) ---
 *.token

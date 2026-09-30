@@ -67,9 +67,8 @@ namespace AQWMod.Localization.Repository
             var path = e.FullPath;
             var now  = DateTime.UtcNow;
 
-            // ignora os próprios arquivos _capture gerados pelo mod
-            if (Path.GetFileName(path).StartsWith("_")) return;
-            if (path.Contains(Path.DirectorySeparatorChar + "_capture" + Path.DirectorySeparatorChar)) return;
+            // ignora o que o mod gera pra si (_capture, _sync, ...)
+            if (ShouldIgnore(_rootPath, path)) return;
 
             lock (_debounceLock)
             {
@@ -81,6 +80,21 @@ namespace AQWMod.Localization.Repository
             }
 
             UnityMainThreadDispatcher.Enqueue(() => OnFileChanged?.Invoke(path));
+        }
+
+        // Mesma regra do TranslationRepository.LoadAll: qualquer segmento do
+        // caminho (pasta ou arquivo) começando com "_" é interno do mod.
+        internal static bool ShouldIgnore(string rootPath, string fullPath)
+        {
+            var root = Path.GetFullPath(rootPath).TrimEnd('\\', '/') + Path.DirectorySeparatorChar;
+            var full = Path.GetFullPath(fullPath);
+            var rel  = full.StartsWith(root, StringComparison.OrdinalIgnoreCase)
+                ? full.Substring(root.Length)
+                : full;
+
+            foreach (var seg in rel.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar))
+                if (seg.StartsWith("_", StringComparison.Ordinal)) return true;
+            return false;
         }
 
         public void Dispose() => Stop();
