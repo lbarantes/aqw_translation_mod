@@ -55,6 +55,9 @@ namespace AQWMod.Localization
                     Logger.LogInfo("[AQWTranslation] npc_names.json recarregado.");
                 };
 
+                // checagem de atualização em segundo plano (1x por sessão, nunca bloqueia)
+                AQWMod.Localization.Sync.UpdateRunner.StartOnce(translationsPath, PluginInfo.Version);
+
                 _harmony = new Harmony(PluginInfo.GUID);
                 RegisterPatches();
 

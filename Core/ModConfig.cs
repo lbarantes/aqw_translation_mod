@@ -35,6 +35,10 @@ namespace AQWMod.Localization.Core
         public static ConfigEntry<string> AutoTranslateSourceLang { get; private set; } = null!;
         public static ConfigEntry<string> AutoTranslateTargetLang { get; private set; } = null!;
 
+        // atualização automática de traduções a partir de um release do GitHub
+        public static ConfigEntry<bool>   UpdatesEnabled    { get; private set; } = null!;
+        public static ConfigEntry<string> UpdatesRepository { get; private set; } = null!;
+
         public static void Initialize(ConfigFile config)
         {
             Enabled = config.Bind(
@@ -86,6 +90,14 @@ namespace AQWMod.Localization.Core
             ShowStatsOnExit = config.Bind(
                 "Debug", "ShowStatsOnExit", true,
                 "Exibe estatísticas de cache/tradução quando o jogo fecha.");
+
+            UpdatesEnabled = config.Bind(
+                "Updates", "Enabled", true,
+                "Verifica uma vez por sessão se há traduções novas no GitHub e as mescla com as suas, sem perder edições locais.");
+
+            UpdatesRepository = config.Bind(
+                "Updates", "Repository", "lbarantes/aqw_translation_mod",
+                "Repositório GitHub (dono/repo) de onde vêm os releases de tradução.");
 
             AutoTranslateEnabled = config.Bind(
                 "AutoTranslate", "Enabled", true,

@@ -64,6 +64,9 @@
        TIPOS (TMP_Text, UnityEngine.UI.Text, etc.) sejam resolvíveis, porque
        alguns campos estáticos de TMPTextPatch são tipados com eles. -->
   <ItemGroup>
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="BepInEx">
       <HintPath>$(BepInExCore)\BepInEx.dll</HintPath>
       <Private>true</Private>

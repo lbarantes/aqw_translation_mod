@@ -43,6 +43,8 @@ namespace AQWMod.Localization.Sync
         public string? PackageVersion { get; set; }
         public bool DryRun { get; set; }
         public long MaxFileBytes { get; set; } = 8L * 1024 * 1024;
+        /// <summary>Se definido, a versão anterior de cada arquivo alterado/apagado é copiada pra cá antes de gravar.</summary>
+        public string? BackupRoot { get; set; }
     }
 
     // Aplica um pacote remoto de traduções sobre a pasta local SEM perder edições:
@@ -117,10 +119,11 @@ namespace AQWMod.Localization.Sync
             // 3) grava: overrides → conteúdo → base → state
             if (!opt.DryRun)
             {
-                report.OverridesWritten = WriteConflictOverrides(opt.LocalRoot, report);
+                report.OverridesWritten = WriteConflictOverrides(opt, report);
 
                 foreach (var p in plans.Where(p => p.WriteLocal))
                 {
+                    Backup(opt, p.LocalPath, p.Rel);
                     if (p.NewRoot == null) { if (File.Exists(p.LocalPath)) File.Delete(p.LocalPath); }
                     else WriteJsonAtomic(p.LocalPath, p.NewRoot);
                 }
@@ -227,17 +230,8 @@ namespace AQWMod.Localization.Sync
         // da pasta, de tamanho razoável e sem links simbólicos.
         private static string? RejectReason(SyncOptions opt, string rel, string full)
         {
-            var parts = rel.Split('/');
-            if (parts.Any(s => s == ".." || s == "." || s.Length == 0 || s.IndexOf(':') >= 0))
-                return "caminho inválido";
-            if (parts.Any(s => s.StartsWith("_", StringComparison.Ordinal)))
-                return "pasta/arquivo reservado (começa com '_')";
-            if (string.Equals(parts[0], "overrides", StringComparison.OrdinalIgnoreCase))
-                return "o pacote remoto não pode escrever na camada overrides/";
-            if (parts.Length == 1 &&
-                (string.Equals(parts[0], "uncategorized.json", StringComparison.OrdinalIgnoreCase) ||
-                 string.Equals(parts[0], "npc_names.json", StringComparison.OrdinalIgnoreCase)))
-                return "arquivo reservado da raiz";
+            var bad = SyncPaths.RejectReason(rel);
+            if (bad != null) return bad;
 
             var fi = new FileInfo(full);
             if ((fi.Attributes & FileAttributes.ReparsePoint) != 0) return "link simbólico";
@@ -250,8 +244,9 @@ namespace AQWMod.Localization.Sync
         // Grava a versão do usuário dos conflitos em overrides/sync_conflicts.json.
         // Pula o que já está coberto por outro override (a edição do usuário lá já
         // vence) e o que colidiria com outro contexto da mesma chave.
-        private static int WriteConflictOverrides(string localRoot, SyncReport report)
+        private static int WriteConflictOverrides(SyncOptions opt, SyncReport report)
         {
+            var localRoot = opt.LocalRoot;
             var toKeep = report.Conflicts.Where(c => c.Local != null).ToList();
             if (toKeep.Count == 0) return 0;
 
@@ -285,7 +280,11 @@ namespace AQWMod.Localization.Sync
                 written++;
             }
 
-            if (written > 0) WriteJsonAtomic(path, root);
+            if (written > 0)
+            {
+                Backup(opt, path, "overrides/" + ConflictsFile);
+                WriteJsonAtomic(path, root);
+            }
             return written;
         }
 
@@ -313,6 +312,14 @@ namespace AQWMod.Localization.Sync
         }
 
         private static string Id(string key, string? ctx) => string.IsNullOrEmpty(ctx) ? key : key + "@@" + ctx;
+
+        private static void Backup(SyncOptions opt, string path, string rel)
+        {
+            if (string.IsNullOrEmpty(opt.BackupRoot) || !File.Exists(path)) return;
+            var dest = Path.Combine(opt.BackupRoot, FromRel(rel));
+            Directory.CreateDirectory(Path.GetDirectoryName(dest)!);
+            File.Copy(path, dest, overwrite: true);
+        }
 
         // -------------------------------------------------------------- estado
 

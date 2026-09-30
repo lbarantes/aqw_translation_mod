@@ -67,6 +67,8 @@
          assemblies de referência do SDK (usada pelo provedor de tradução
          automática, Fase 5, para chamadas HTTP assíncronas). -->
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="System.IO.Compression.FileSystem" />
   </ItemGroup>
 
   <!-- Copia DLL compilada para BepInEx/plugins automaticamente -->
