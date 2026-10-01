@@ -22,7 +22,9 @@ $translatorOnly = @(
     'AutoTranslationOrchestrator',
     'MyMemoryTranslationProvider',
     'TranslationFileStore',
-    'IngameEditsMigrator'
+    'IngameEditsMigrator',
+    'PullRequestComposer',
+    'LocalChanges'
 )
 
 function Build-Edition([string]$edition) {

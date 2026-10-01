@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(Edition)' == 'Player'">
-    <Compile Remove="Overlay\**;Capture\**;Translation\**;Migration\**" />
+    <Compile Remove="Overlay\**;Capture\**;Translation\**;Migration\**;GitHubPr\**" />
     <Compile Remove="Repository\TranslationFileStore.cs" />
     <Compile Remove="Interceptors\InputBlockerPatch.cs;Interceptors\InputFieldCaretFix.cs" />
   </ItemGroup>
