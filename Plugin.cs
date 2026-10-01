@@ -8,8 +8,11 @@ using TMPro;
 using UnityEngine;
 using AQWMod.Localization.Core;
 using AQWMod.Localization.Interceptors;
-using AQWMod.Localization.Overlay;
 using AQWMod.Localization.Repository;
+#if TRANSLATOR
+using AQWMod.Localization.Capture;
+using AQWMod.Localization.Overlay;
+#endif
 
 namespace AQWMod.Localization
 {
@@ -42,7 +45,14 @@ namespace AQWMod.Localization
 
                 var translationsPath = ResolveTranslationsPath();
                 Logger.LogInfo($"[AQWTranslation] Pasta de traduções: '{translationsPath}'");
+#if TRANSLATOR
+                // só o tradutor captura strings sem tradução (_capture/) e alimenta o overlay
+                CaptureHook.Recorder = CaptureRegistry.Record;
+                TranslationManager.Instance.Initialize(translationsPath,
+                    logger => new MissingTranslationCollector(translationsPath, logger));
+#else
                 TranslationManager.Instance.Initialize(translationsPath);
+#endif
                 TMPTextPatch.LoadNpcNames(translationsPath); // npc_names.json (opcional)
 
                 // TranslationManager não conhece TMPTextPatch diretamente (evita
@@ -61,6 +71,9 @@ namespace AQWMod.Localization
                 _harmony = new Harmony(PluginInfo.GUID);
                 RegisterPatches();
 
+                Logger.LogInfo($"[AQWTranslation] Edição: {PluginInfo.Edition}");
+
+#if TRANSLATOR
                 // overlay de edição in-game (F10 pra abrir). O prefixo "_AQW" é
                 // obrigatório: a varredura e o inspector ignoram qualquer objeto
                 // cujo transform.root.name comece com "_AQW", pra não capturar/
@@ -70,6 +83,7 @@ namespace AQWMod.Localization
                 overlayGo.AddComponent<TranslationEditorOverlay>();
                 DontDestroyOnLoad(overlayGo);
                 Logger.LogInfo("[AQWTranslation] Overlay pronto — pressione F10 no jogo.");
+#endif
             }
             catch (Exception ex)
             {
@@ -124,6 +138,8 @@ namespace AQWMod.Localization
                 prefix: new HarmonyMethod(typeof(LegacyTextPatch), nameof(LegacyTextPatch.Prefix_TextSetter)),
                 label: "UI.Text.set_text");
 
+#if TRANSLATOR
+            // isolamento de input e caret do editor — só fazem sentido com o overlay
             try
             {
                 _harmony!.PatchAll(typeof(InputBlockerPatch));
@@ -143,6 +159,7 @@ namespace AQWMod.Localization
             {
                 Logger.LogWarning($"[AQWTranslation] ✗ InputField caret fix falhou: {ex.Message}");
             }
+#endif
 
             int fail = total - ok;
             Logger.LogInfo($"[AQWTranslation] Patches: {ok} OK" +
@@ -228,5 +245,10 @@ namespace AQWMod.Localization
         public const string GUID    = "com.aqwmod.localization";
         public const string Name    = "AQW PT-BR Localization";
         public const string Version = "2.2.0";
+#if TRANSLATOR
+        public const string Edition = "Translator";
+#else
+        public const string Edition = "Player";
+#endif
     }
 }

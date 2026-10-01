@@ -7,7 +7,6 @@ using HarmonyLib;
 using TMPro;
 using UnityEngine;
 using AQWMod.Localization.Core;
-using AQWMod.Localization.Capture;
 using AQWMod.Localization.Utils;
 
 namespace AQWMod.Localization.Interceptors
@@ -78,7 +77,7 @@ namespace AQWMod.Localization.Interceptors
             return false;
         }
 
-        // captura pro overlay: DoTranslate só faz PUSH via CaptureRegistry.Record(),
+        // captura pro overlay: DoTranslate só faz PUSH via CaptureHook.Record(),
         // o overlay faz PULL via Snapshot/RecentlySeen
 
         // preenchido quando um TMP_Text do container "Names" é detectado —
@@ -261,12 +260,12 @@ namespace AQWMod.Localization.Interceptors
 
                     // push da chave do template + o nome da quest sozinho, pro
                     // usuário poder traduzir a quest direto no overlay
-                    CaptureRegistry.Record(qKey, original,
+                    CaptureHook.Record(qKey, original,
                         inferredContext, GetPath(component),
                         null, null, new[] { qMap },
                         Time.realtimeSinceStartup, "tmp");
                     if (qQuest.Length >= 2)
-                        CaptureRegistry.Record(qQuest, qQuest,
+                        CaptureHook.Record(qQuest, qQuest,
                             inferredContext, GetPath(component),
                             null, null, null, Time.realtimeSinceStartup, "tmp");
 
@@ -300,7 +299,7 @@ namespace AQWMod.Localization.Interceptors
                 // push pro overlay (captura cutscene/texto transiente).
                 // Append/update-only: registrar a mesma chave duas vezes só
                 // atualiza LastSeen/SeenCount, nunca duplica
-                CaptureRegistry.Record(
+                CaptureHook.Record(
                     lookupKey, original,
                     inferredContext, GetPath(component),
                     capturedPlayers, capturedNums, capturedMaps,

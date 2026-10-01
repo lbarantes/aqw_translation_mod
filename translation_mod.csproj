@@ -11,6 +11,29 @@
     <NoWarn>CS8601;CS8602;CS8600;CS8620;CS0184</NoWarn>
   </PropertyGroup>
 
+  <!-- Edições (mesma AQWTranslation.dll, mesmo GUID de plugin):
+         Translator (padrão) = tudo, incluindo overlay F10, captura e envio de PR;
+         Player             = só tradução + atualização automática. O código do
+                              editor NÃO entra na DLL (excluído da compilação).
+       Uso: dotnet build -p:Edition=Player  (ver tools/build-editions.ps1) -->
+  <PropertyGroup>
+    <Edition Condition="'$(Edition)' == ''">Translator</Edition>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Edition)' == 'Translator'">
+    <DefineConstants>$(DefineConstants);TRANSLATOR</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(Edition)' == 'Player'">
+    <Compile Remove="Overlay\**;Capture\**;Translation\**;Migration\**" />
+    <Compile Remove="Repository\TranslationFileStore.cs" />
+    <Compile Remove="Interceptors\InputBlockerPatch.cs;Interceptors\InputFieldCaretFix.cs" />
+  </ItemGroup>
+
+  <Target Name="ValidateEdition" BeforeTargets="BeforeBuild" Condition="'$(Edition)' != 'Translator' And '$(Edition)' != 'Player'">
+    <Error Text="Edition inválida: '$(Edition)'. Use Translator ou Player." />
+  </Target>
+
   <PropertyGroup>
     <GameRoot>$(MSBuildProjectDirectory)\..</GameRoot>
     <ManagedDir>$(GameRoot)\AdventureQuest Worlds Infinity_Data\Managed</ManagedDir>
@@ -72,8 +95,9 @@
   </ItemGroup>
 
   <!-- Copia DLL compilada para BepInEx/plugins automaticamente -->
-  <Target Name="DeployPlugin" AfterTargets="Build">
-    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
+  <!-- Só a edição Translator (a de desenvolvimento) é copiada pro jogo. -->
+  <Target Name="DeployPlugin" AfterTargets="Build" Condition="'$(Edition)' == 'Translator' And '$(SkipDeploy)' != 'true'">
+    <Copy SourceFiles="$(TargetPath)"
           DestinationFolder="$(BepInExPlugins)"
           SkipUnchangedFiles="true" />
     <Message Text="[Deploy] $(AssemblyName).dll copiado para $(BepInExPlugins)" Importance="high" />

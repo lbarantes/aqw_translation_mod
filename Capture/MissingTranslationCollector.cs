@@ -51,6 +51,7 @@ namespace AQWMod.Localization.Capture
 
         public void Capture(string text, TranslationContext? context)
         {
+            if (ModConfig.CaptureEnabled?.Value == false) return;
             if (!ShouldCapture(text)) return;
 
             var category = InferCategory(context?.ComponentPath ?? string.Empty);

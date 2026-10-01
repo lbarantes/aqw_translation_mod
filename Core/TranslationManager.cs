@@ -1,7 +1,6 @@
 using System;
 using AQWMod.Localization.Repository;
 using AQWMod.Localization.Pipeline;
-using AQWMod.Localization.Capture;
 using AQWMod.Localization.Debug;
 
 namespace AQWMod.Localization.Core
@@ -43,7 +42,8 @@ namespace AQWMod.Localization.Core
 
         private TranslationManager() { }
 
-        public void Initialize(string translationsRootPath)
+        public void Initialize(string translationsRootPath,
+            Func<TranslationLogger, IMissingTranslationCollector>? collectorFactory = null)
         {
             if (_initialized) return;
 
@@ -57,7 +57,7 @@ namespace AQWMod.Localization.Core
             repo.LoadAll(translationsRootPath);
 
             _pipeline  = new LocalizationPipeline(Repository, _logger);
-            _collector = new MissingTranslationCollector(translationsRootPath, _logger);
+            _collector = collectorFactory?.Invoke(_logger) ?? new NullMissingTranslationCollector();
 
             if (ModConfig.HotReloadEnabled.Value)
             {
@@ -116,8 +116,7 @@ namespace AQWMod.Localization.Core
             if (ModConfig.LogMisses.Value)
                 _logger.Debug($"[MISS] '{original}'");
 
-            if (ModConfig.CaptureEnabled.Value)
-                _collector.Capture(original, ctx);
+            _collector.Capture(original, ctx);
 
             return result.Text;
         }

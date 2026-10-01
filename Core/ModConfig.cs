@@ -11,6 +11,7 @@ namespace AQWMod.Localization.Core
         public static ConfigEntry<string> Locale            { get; private set; } = null!;
         public static ConfigEntry<int>    CacheCapacity     { get; private set; } = null!;
 
+#if TRANSLATOR
         // captura
         public static ConfigEntry<bool>   CaptureEnabled    { get; private set; } = null!;
         public static ConfigEntry<int>    CaptureMinLength  { get; private set; } = null!;
@@ -19,6 +20,7 @@ namespace AQWMod.Localization.Core
         // aplica tradução durante a varredura contínua, alcançando texto
         // definido por caminho de escrita que os patches Harmony não interceptam
         public static ConfigEntry<bool>   EnforceOnScan     { get; private set; } = null!;
+#endif
 
         // hot reload
         public static ConfigEntry<bool>   HotReloadEnabled  { get; private set; } = null!;
@@ -29,11 +31,13 @@ namespace AQWMod.Localization.Core
         public static ConfigEntry<bool>   LogMisses         { get; private set; } = null!;
         public static ConfigEntry<bool>   ShowStatsOnExit   { get; private set; } = null!;
 
+#if TRANSLATOR
         // só afeta o botão "Auto Traduzir" da GUI — nunca roda sozinho, nunca
         // sobrescreve tradução manual sem confirmação explícita no preview
         public static ConfigEntry<bool>   AutoTranslateEnabled    { get; private set; } = null!;
         public static ConfigEntry<string> AutoTranslateSourceLang { get; private set; } = null!;
         public static ConfigEntry<string> AutoTranslateTargetLang { get; private set; } = null!;
+#endif
 
         // atualização automática de traduções a partir de um release do GitHub
         public static ConfigEntry<bool>   UpdatesEnabled    { get; private set; } = null!;
@@ -53,6 +57,7 @@ namespace AQWMod.Localization.Core
                 "Performance", "CacheCapacity", 4096,
                 "Número máximo de strings em cache LRU. Aumente se o jogo tiver muitos textos únicos.");
 
+#if TRANSLATOR
             CaptureEnabled = config.Bind(
                 "Capture", "CaptureEnabled", true,
                 "Salva automaticamente strings sem tradução para o arquivo _capture.");
@@ -70,6 +75,7 @@ namespace AQWMod.Localization.Core
                 "Reaplica traduções nos textos visíveis durante a varredura contínua. " +
                 "Alcança textos cujo caminho de escrita não é interceptado pelos patches " +
                 "Harmony (ex.: popup 'Goto map ...'). Desative se causar efeitos colaterais.");
+#endif
 
             HotReloadEnabled = config.Bind(
                 "HotReload", "HotReloadEnabled", true,
@@ -99,6 +105,7 @@ namespace AQWMod.Localization.Core
                 "Updates", "Repository", "lbarantes/aqw_translation_mod",
                 "Repositório GitHub (dono/repo) de onde vêm os releases de tradução.");
 
+#if TRANSLATOR
             AutoTranslateEnabled = config.Bind(
                 "AutoTranslate", "Enabled", true,
                 "Habilita o botão 'Auto Traduzir' da GUI (usa uma API pública de " +
@@ -112,6 +119,7 @@ namespace AQWMod.Localization.Core
             AutoTranslateTargetLang = config.Bind(
                 "AutoTranslate", "TargetLang", "pt-BR",
                 "Idioma de destino para a tradução automática.");
+#endif
         }
     }
 }
