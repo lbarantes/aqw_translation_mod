@@ -65,6 +65,7 @@
        alguns campos estáticos de TMPTextPatch são tipados com eles. -->
   <ItemGroup>
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Security" />
     <Reference Include="System.IO.Compression" />
     <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="BepInEx">

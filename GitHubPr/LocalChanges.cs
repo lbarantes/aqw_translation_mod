@@ -25,6 +25,8 @@ namespace AQWMod.Localization.GitHubPr
         public string File { get; set; } = "";
         /// <summary>O arquivo não existe no pacote do GitHub (não tem snapshot base).</summary>
         public bool IsNewFile { get; set; }
+        /// <summary>Conteúdo completo do arquivo local (usado quando o arquivo não existe no GitHub).</summary>
+        public JObject? LocalRoot { get; set; }
         public List<EntryChange> Changes { get; } = new List<EntryChange>();
 
         public int Added    => Changes.Count(c => c.Kind == ChangeKind.Added);
@@ -102,7 +104,7 @@ namespace AQWMod.Localization.GitHubPr
 
                 var ln = l != null ? SyncEngine.Node(l) : new JObject();
                 var bn = b != null ? SyncEngine.Node(b) : new JObject();
-                var fc = new FileChange { File = rel, IsNewFile = b == null };
+                var fc = new FileChange { File = rel, IsNewFile = b == null, LocalRoot = l };
 
                 foreach (var p in ln.Properties())
                 {
