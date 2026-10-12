@@ -36,6 +36,7 @@ namespace AQWMod.Localization.Overlay
 
             _viewMode = ViewMode.Settings;
             if (_imgSettings != null) _imgSettings.color = BgChipOn;
+            if (_imgGitHub != null) _imgGitHub.color = BgChip;
 
             foreach (Transform t in _listContent) Destroy(t.gameObject);
             _rows.Clear();

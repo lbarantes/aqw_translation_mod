@@ -24,7 +24,11 @@ $translatorOnly = @(
     'TranslationFileStore',
     'IngameEditsMigrator',
     'PullRequestComposer',
-    'LocalChanges'
+    'LocalChanges',
+    'DeviceFlowClient',
+    'PullRequestSubmitter',
+    'HttpGitHubApi',
+    'DpapiSecretProtector'
 )
 
 function Build-Edition([string]$edition) {

@@ -89,7 +89,7 @@ namespace AQWMod.Localization.Overlay
         // janela standalone "Textos detectados na tela" — a janela principal
         // não usa mais ViewMode.Scan. O Inspetor (F11) foi extraído pra um
         // mod separado.
-        private enum ViewMode { Tree, Scan, Settings }
+        private enum ViewMode { Tree, Scan, Settings, GitHub }
 
         // Agrupa tudo que uma lista de linhas (busca, filtro, seleção,
         // buffers, rótulos) precisa pra existir de forma independente —
@@ -293,6 +293,7 @@ namespace AQWMod.Localization.Overlay
             {
                 if (_detailPanel != null) _detailPanel.SetActive(false);
                 if (_imgSettings != null) _imgSettings.color = BgChip;
+                if (_imgGitHub != null) _imgGitHub.color = BgChip;
                 // nada a limpar: CaptureRegistry é append/update-only e
                 // persiste entre aberturas do overlay
             }

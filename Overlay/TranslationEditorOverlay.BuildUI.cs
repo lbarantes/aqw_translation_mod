@@ -68,8 +68,10 @@ namespace AQWMod.Localization.Overlay
                 // descarta o cache por componente, textos já na tela que
                 // ganharam tradução nova são re-traduzidos no próximo setter
                 TMPTextPatch.InvalidateSafeTranslateCache();
-                if (_viewMode != ViewMode.Settings) DoTree();
+                if (_viewMode != ViewMode.Settings && _viewMode != ViewMode.GitHub) DoTree();
             });
+            var ghBtn = Btn(hdr, "GitHub", 56, 24, BgChip, ToggleGitHub);
+            _imgGitHub = ghBtn.GetComponent<Image>();
             var cfgBtn = Btn(hdr, "⚙", 30, 24, BgChip, ToggleSettings);
             _imgSettings = cfgBtn.GetComponent<Image>();
             Btn(hdr, "✕", 30, 24, BgClose, () => SetVisible(false));
