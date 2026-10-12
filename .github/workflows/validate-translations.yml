@@ -1,0 +1,26 @@
+name: Validar traduções
+
+on:
+  pull_request:
+    paths:
+      - 'translations/**'
+      - 'tools/validate-translations.ps1'
+      - 'tools/make-release.ps1'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar arquivos de tradução
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File tools/validate-translations.ps1
+
+      # garante que o pacote de release ainda pode ser gerado com estas traduções
+      - name: Gerar pacote de teste
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File tools/make-release.ps1 -Out "$env:RUNNER_TEMP/release" -Version 0.0.1

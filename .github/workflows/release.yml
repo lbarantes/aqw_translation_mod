@@ -1,0 +1,44 @@
+name: Publicar traduções
+
+# Rodado manualmente (Actions > Publicar traduções > Run workflow).
+# Cria um Release com translations.zip + manifest.json; o mod baixa sempre
+# o mais recente (releases/latest) uma vez por sessão de jogo.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Versão do pacote (ex.: 2026.10.12 ou 2026.10.12.2). Deve ser maior que a anterior.'
+        required: true
+      notes:
+        description: 'Resumo do que mudou (opcional)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File tools/validate-translations.ps1
+
+      - name: Gerar pacote
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File tools/make-release.ps1 -Out dist/release -Version "${{ inputs.version }}"
+
+      - name: Criar release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          gh release create "translations-$VERSION" \
+            dist/release/translations.zip dist/release/manifest.json \
+            --title "Traduções $VERSION" \
+            --notes "${NOTES:-Pacote de traduções $VERSION.}"
