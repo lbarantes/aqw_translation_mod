@@ -154,6 +154,15 @@ namespace AQWMod.Localization.Core
                 return;
             }
 
+            if (!System.IO.File.Exists(filePath))
+            {
+                ((TranslationRepository)Repository).RemoveFile(filePath);
+                _cache.Invalidate();
+                _stats.IncrementReloads();
+                OnTranslationsReloaded?.Invoke();
+                return;
+            }
+
             _logger.Info($"[HotReload] Recarregando: {System.IO.Path.GetFileName(filePath)}");
 
             try

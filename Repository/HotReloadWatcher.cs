@@ -49,6 +49,10 @@ namespace AQWMod.Localization.Repository
 
             _watcher.Changed += HandleFsEvent;
             _watcher.Created += HandleFsEvent;
+            // gravacao atomica (temp -> Move/Replace) chega como Renamed, nao como
+            // Created/Changed; arquivo apagado pelo atualizador chega como Deleted
+            _watcher.Renamed += (s, e) => HandleFsEvent(s, e);
+            _watcher.Deleted += HandleFsEvent;
 
             Debug.TranslationLogger.StaticWarning(
                 $"[HotReload] Monitorando '{_rootPath}'");

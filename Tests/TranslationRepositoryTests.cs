@@ -45,6 +45,35 @@ namespace AQWMod.Localization.Tests
         }
 
         [Fact]
+        public void RemoveFile_DropsOnlyThatFilesKeys()
+        {
+            WriteJson("ui/hud.json", "{ \"Attack\": \"Ataque\" }");
+            WriteJson("maps/a.json", "{ \"Hello\": \"Ola\" }");
+            var repo = NewRepo();
+            repo.LoadAll(_dir);
+
+            var gone = Path.Combine(_dir, "maps", "a.json");
+            File.Delete(gone);
+            repo.RemoveFile(gone);
+
+            Assert.False(repo.TryGet("Hello", out _));
+            Assert.True(repo.TryGet("Attack", out var v));
+            Assert.Equal("Ataque", v);
+            Assert.False(repo.Index.KeysByFile.ContainsKey("maps\\a.json") || repo.Index.KeysByFile.ContainsKey("maps/a.json"));
+        }
+
+        [Fact]
+        public void RemoveFile_UnknownFile_IsNoOp()
+        {
+            WriteJson("ui/hud.json", "{ \"Attack\": \"Ataque\" }");
+            var repo = NewRepo();
+            repo.LoadAll(_dir);
+
+            repo.RemoveFile(Path.Combine(_dir, "never", "loaded.json"));
+            Assert.True(repo.TryGet("Attack", out _));
+        }
+
+        [Fact]
         public void LoadAll_MissingKey_TryGetReturnsFalse()
         {
             WriteJson("ui/hud.json", "{ \"Attack\": \"Ataque\" }");

@@ -201,6 +201,28 @@ namespace AQWMod.Localization.Repository
             _logger.Info($"[HotReload] '{relPath}': {entries.Count} strings atualizadas.");
         }
 
+        /// <summary>
+        /// Arquivo apagado do disco (ex.: removido pela atualização): tira da memória
+        /// as chaves que ele definia, se ainda eram dele.
+        /// </summary>
+        public void RemoveFile(string filePath)
+        {
+            var relPath = GetRelativePath(filePath);
+            if (!_keysByFileMap.TryRemove(relPath, out var keys)) return;
+
+            foreach (var keyStr in keys)
+            {
+                if (_sourceFileMap.TryGetValue(keyStr, out var owner) &&
+                    string.Equals(owner, relPath, StringComparison.OrdinalIgnoreCase))
+                {
+                    _translations.TryRemove(TranslationKey.Parse(keyStr), out _);
+                    _sourceFileMap.TryRemove(keyStr, out _);
+                }
+            }
+
+            _logger.Info($"[HotReload] '{relPath}' removido: {keys.Count} chave(s) descarregadas.");
+        }
+
         public bool TryGet(string key, out string value) => TryGet(key, null, out value);
 
         public bool TryGet(string key, string? context, out string value)
