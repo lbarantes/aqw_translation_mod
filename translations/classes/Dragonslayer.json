@@ -1,0 +1,22 @@
+﻿{
+  "translations": {
+    "+DRAGONBANE": "+ RUÍNA DO DRAGÃO",
+    "-DRAGONBANE": "- RUÍNA DO DRAGÃO",
+    "Dragon's Bane": "Ruína do Dragão",
+    "Impale": "Empalar",
+    "Incapacitate": "Incapacitar",
+    "Scorched Steel": "Lâmina Escaldante",
+    "{n1}s Cooldown\n\nIgnite your weapon, striking nearby targets with a flaming slash and gaining {n2} Determination.\r\n\r\nDetermined: Strike {n3} times in quick succession.": "<color=#fc7f49>3s</color> Cooldown\\n\\nIncendeie sua arma, ataque inimigos a sua frente com um ataque flamejante e receba <color=#b6b6b6>10 de Determinação</color>.\r\\n\r\\nEnquanto estiver determinado: Ataque 3 vezes rapidamente",
+    "{n1}s Cooldown\n\nLeap towards your target, striking them and nearby targets upon landing and gaining {n2} Determination. Applies Weakened, reducing your target's physical and magical damage by {n3}% for {n4} seconds.\r\n\r\nDetermined: Stun your target for {n5} seconds.": "<color=#fc7f49>10s</color> Cooldown\\n\\nSalte em direção a seu alvo, atingido a ele e alvos próximos ao aterrisar, ganhando <color=#b6b6b6>10 de Determinação</color>. Aplica \"Enfraquecido\" reduzindo o dano físico e mágico do seu alvo em 10% por 5 segundos.\r\\n\\nEnquanto estiver determinado: Atordoe seu alvo por 3 segundos. ",
+    "{n1}s Cooldown\n\nPassive: Your skills grant you Determination. At {n2} Determination you become Determined, empowering your next skill with an additional effect.\n\nDouble click a monster to start Auto Attacking it. Damages {n3} target and grants {n4} Determination.": "<color=#fc7f49>2s</color> Cooldown\\n\\nPassiva: Suas skills te dão <color=#b6b6b6>Determinação</color>. Com 50 de Determinação você se sente Determinado, fortalecendo sua próxima habilidade com um efeito adicional.\\n\\nClique duas vezes em um monstro para iniciar seu ataque. \\nAtaca 1 alvo e te enche com <color=#b6b6b6>5 de Determinação</color>",
+    "{n1}s Cooldown\n\nThrust forward, pulling hit targets towards you and inflicting them with Bleeding, a {n2} second DoT. Gain {n3} Determination upon striking an enemy.\r\n\r\nDetermined: Heals you for {n4}% of your max HP, plus an amount based on your END.": "<color=#fc7f49>6s</color> Cooldown\\n\\nAvance puxando os alvos atingidos em sua direção e causando sangramento - um dano contínuo de 3 segundos. Ganhe <color=#b6b6b6>10 de Determinação</color> ao acertar um inimigo.\r\r\\n\\nEnquanto estiver determinado: Cure em 15% da sua vida máxima com um bônus baseado na sua resistência",
+    "{n1}s Cooldown\nPassive: Your skills deal {n2}% more damage to Dragonkin.\r\n\nUnleash the power of your Dragon Blade. Instantly grants you {n3} Determination and applies Dragonbane for {n4} seconds, doubling your skills' Determination gain and increasing your bonus damage against Dragonkin to {n5}%.": "<color=#fc7f49>25s</color> Cooldown\\nPassiva: Seus ataques dão 20% a mais de dano em dragões (Dragonkin)\\n\\nLibere o poder de sua Lâmina Dracônica. Te enche com <color=#b6b6b6>50 de Determinação</color> e aplica Ruina dos Dragões por 10 segundos, dobrando o ganho de Determinação das suas habilidades e aumentando seu dano bônus contra dragões para 50%.",
+    "+BLEEDING": "+ SANGRANDO",
+    "+DETERMINED": "+ DETERMINADO",
+    "+STUNNED": "+ ATORDOADO",
+    "+WEAKENED": "+ ENFRAQUECIDO"
+  },
+  "$meta": {
+    "schemaVersion": "2.0"
+  }
+}

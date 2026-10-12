@@ -1,0 +1,11 @@
+﻿{
+  "translations": {
+    "Abandon": "Abandonar",
+    "Go to Quest": "Ir para Quest",
+    "Next Quest": "Próxima Quest",
+    "Quest Objectives": "Objetivos da Quest"
+  },
+  "$meta": {
+    "schemaVersion": "2.0"
+  }
+}

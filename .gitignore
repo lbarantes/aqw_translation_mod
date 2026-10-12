@@ -9,10 +9,8 @@ dist/
 _backup_*/
 _stray_recovered/
 
-# --- Traduções: por enquanto ficam FORA do repo ---
-# Em runtime elas vivem em BepInEx/plugins/translations. Esta cópia local é
-# antiga e divergente. Será decidida/reintroduzida na etapa de merge/sync.
-/translations/
+# --- Traducoes: translations/ E versionado (conteudo que vai nos releases).
+#     O que o mod gera dentro dela fica de fora pelas regras abaixo.
 
 # --- Outro mod que já morou nesta pasta (projeto independente) ---
 fury_mod/
@@ -39,3 +37,6 @@ _sync/
 *.user
 *.suo
 .claude/
+
+# camada de override local (nao faz parte do pacote)
+/translations/overrides/
