@@ -40,21 +40,28 @@ que tem o `AdventureQuest Worlds Infinity.exe`. Os .zip já trazem o BepInEx.
 
 ### Publicar um release
 
-O release é publicado deste PC, porque compilar o mod exige as DLLs do jogo.
-Com o commit já no GitHub (push feito), rode:
+**Traduções saem sozinhas.** Cada merge na `main` que mexe em `translations/`
+(por exemplo, uma PR enviada pela aba GitHub do editor) dispara o workflow
+*Publicar traduções*, que publica um release novo (v0.1.1 → v0.1.2) com o pacote
+de traduções atualizado e o mesmo instalador do release anterior. Os jogadores
+recebem as traduções ao abrir o jogo, sem reinstalar. Também dá para rodar à
+mão em **Actions > Publicar traduções > Run workflow**.
+
+**Código novo sai do seu PC**, porque compilar o mod exige as DLLs do jogo.
+Com o commit já no GitHub (push feito) e a `main` local atualizada (`git pull`), rode:
 
 ```bash
-powershell -ExecutionPolicy Bypass -File tools/publish-release.ps1 -Version 0.1.1 -Notes "O que mudou"
+powershell -ExecutionPolicy Bypass -File tools/publish-release.ps1 -Version 0.2.0 -Notes "O que mudou"
 ```
 
 O script valida as traduções, compila as duas edições, gera o instalador e
-os .zip (com o BepInEx) e o pacote de traduções, e cria o release `v0.1.1`
+os .zip (com o BepInEx) e o pacote de traduções, e cria o release `v0.2.0`
 com tudo junto. A versão precisa ser maior que a anterior.
 
 Precisa, uma vez: GitHub CLI com login (`winget install GitHub.cli` e
 `gh auth login`) e Inno Setup 6 (`winget install JRSoftware.InnoSetup`).
 Para só gerar os arquivos em `dist/release`, sem publicar, use
-`tools/build-release.ps1 -Version 0.1.1`.
+`tools/build-release.ps1 -Version 0.2.0`.
 
 ## Atualizações
 

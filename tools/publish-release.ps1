@@ -41,6 +41,8 @@ if (git status --porcelain) { throw 'Ha alteracoes sem commit. Faca commit (e pu
 git fetch origin --quiet
 $head = (git rev-parse HEAD).Trim()
 if (-not (git branch -r --contains $head)) { throw 'O commit atual ainda nao esta no GitHub. Faca push antes de publicar.' }
+# sem isto, um release sai sem o que ja foi mesclado no GitHub (ex.: PR de traducao)
+if ([int](git rev-list --count HEAD..origin/main) -gt 0) { throw 'Sua main esta atras da do GitHub. Rode "git pull" antes de publicar.' }
 
 if (Test-Native { & $gh release view "v$Version" --repo $Repo }) { throw "O release v$Version ja existe." }
 

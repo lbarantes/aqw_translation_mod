@@ -1,0 +1,76 @@
+name: Publicar traduções
+
+# A cada merge na main que mexa em translations/, publica sozinho um release
+# novo (versão do último + 1 no último número: v0.1.1 -> v0.1.2) com o
+# pacote de traduções atualizado. O mod de cada jogador baixa o
+# releases/latest ao abrir o jogo, então a tradução chega sem ninguém
+# reinstalar nada.
+#
+# O código do mod NÃO é compilado aqui (precisa das DLLs do jogo): o
+# instalador e os .zip são copiados do release anterior, sem mudança.
+# Release com código novo continua sendo feito do PC (tools/publish-release.ps1).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'translations/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# dois merges seguidos não podem calcular a mesma versão
+concurrency:
+  group: publicar-traducoes
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validar traduções
+        shell: powershell
+        run: powershell -ExecutionPolicy Bypass -File tools/validate-translations.ps1
+
+      - name: Gerar e publicar
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Continue: no PowerShell 5, stderr do gh viraria exceção; os erros
+          # são conferidos um a um pelo código de saída
+          $ErrorActionPreference = 'Continue'
+          $repo = $env:GITHUB_REPOSITORY
+
+          $prev = (gh release view --repo $repo --json tagName -q .tagName).Trim()
+          if ($LASTEXITCODE -ne 0 -or -not $prev) { throw 'Nenhum release anterior; publique o primeiro do PC (tools/publish-release.ps1).' }
+          $parts = $prev.TrimStart('v').Split('.')
+          $parts[-1] = [string]([int]$parts[-1] + 1)
+          $version = $parts -join '.'
+          Write-Host "Release anterior: $prev -> novo: v$version"
+
+          # instalador, .zip e minModVersion iguais aos do release anterior
+          New-Item -ItemType Directory -Force dist/prev, dist/release | Out-Null
+          gh release download $prev --repo $repo -D dist/prev -p 'AQWTranslation-*' -p 'manifest.json'
+          if ($LASTEXITCODE -ne 0) { throw "Falha ao baixar os arquivos de $prev" }
+          $minMod = (Get-Content dist/prev/manifest.json -Raw | ConvertFrom-Json).minModVersion
+          if (-not $minMod) { throw "manifest.json de $prev sem minModVersion" }
+
+          powershell -ExecutionPolicy Bypass -File tools/make-release.ps1 -Out dist/release -Version $version -MinModVersion $minMod
+          if ($LASTEXITCODE -ne 0) { throw 'Falha ao gerar o pacote de traducoes' }
+          Copy-Item dist/prev/AQWTranslation-* dist/release/
+
+          # textos com acento ficam em arquivos UTF-8 (PowerShell 5 leria o
+          # script do workflow como ANSI)
+          $intro = (Get-Content tools/release-notes-auto.md -Raw -Encoding UTF8).Trim()
+          $intro = $intro.Replace('{{SHA}}', $env:GITHUB_SHA.Substring(0, 7)).Replace('{{PREV}}', $prev)
+          $template = Get-Content tools/release-notes.md -Raw -Encoding UTF8
+          [IO.File]::WriteAllText("$PWD/dist/notes.md", $template.Replace('{{NOTES}}', $intro), (New-Object Text.UTF8Encoding($false)))
+
+          $assets = Get-ChildItem dist/release -File | ForEach-Object { $_.FullName }
+          gh release create "v$version" --repo $repo --target $env:GITHUB_SHA `
+            --title "AQW Translation $version" --notes-file dist/notes.md @assets
+          if ($LASTEXITCODE -ne 0) { throw 'Falha ao criar o release' }
