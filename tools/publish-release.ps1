@@ -44,6 +44,9 @@ if (-not (git branch -r --contains $head)) { throw 'O commit atual ainda nao est
 
 if (Test-Native { & $gh release view "v$Version" --repo $Repo }) { throw "O release v$Version ja existe." }
 
+# o validador so chama "exit" quando falha; sem zerar antes, sobraria o
+# codigo do ultimo programa externo (o "gh release view" acima)
+$global:LASTEXITCODE = 0
 & (Join-Path $PSScriptRoot 'validate-translations.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'Validacao das traducoes falhou.' }
 & (Join-Path $PSScriptRoot 'build-release.ps1') -Version $Version -RequireInstaller
