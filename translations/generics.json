@@ -1,9 +1,10 @@
-﻿{
+{
   "translations": {
     "Abandon": "Abandonar",
     "Go to Quest": "Ir para Quest",
     "Next Quest": "Próxima Quest",
-    "Quest Objectives": "Objetivos da Quest"
+    "Quest Objectives": "Objetivos da Quest",
+    "Item already exists in your bank!": "Você já possui esse item no banco!"
   },
   "$meta": {
     "schemaVersion": "2.0"
