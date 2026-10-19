@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Versão das traduções (ex.: 2026.10.19 ou 2026.10.19.2). Deve ser maior que a anterior.'
+        description: 'Versão do release (ex.: 0.1.0 ou 0.1.1). Deve ser maior que a anterior.'
         required: true
       notes:
         description: 'Resumo do que mudou (opcional)'
@@ -76,11 +76,11 @@ jobs:
           **AQWTranslation-Translator.zip** (tradutor) dentro da pasta do jogo, a que tem o
           \`AdventureQuest Worlds Infinity.exe\`.
           EOF
-          gh release create "v$MOD-$VERSION" \
+          gh release create "v$VERSION" \
             dist/release/AQWTranslation-Setup.exe \
             dist/release/AQWTranslation-Player.zip \
             dist/release/AQWTranslation-Translator.zip \
             dist/release/translations.zip \
             dist/release/manifest.json \
-            --title "AQW Translation $MOD (traduções $VERSION)" \
+            --title "AQW Translation $VERSION" \
             --notes-file notes.md

@@ -1,7 +1,7 @@
 ﻿; Instalador do AQW Translation Mod (Inno Setup 6).
 ;
 ; Gerado por tools/build-release.ps1, que passa:
-;   /DAppVersion=2.2.0          versão do mod (PluginInfo.Version)
+;   /DAppVersion=0.1.0          versão do mod (PluginInfo.Version)
 ;   /DBuildDir=<pasta>          com bepinex\, Player\ e Translator\ prontos
 ;
 ; O que faz:

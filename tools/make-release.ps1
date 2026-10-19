@@ -14,7 +14,7 @@ param(
     [string]$Source = '',
     [string]$Out = '',
     [string]$Version = '',
-    [string]$MinModVersion = '2.2.0'
+    [string]$MinModVersion = '0.1.0'
 )
 
 $ErrorActionPreference = 'Stop'

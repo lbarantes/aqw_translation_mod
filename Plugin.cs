@@ -244,7 +244,7 @@ namespace AQWMod.Localization
     {
         public const string GUID    = "com.aqwmod.localization";
         public const string Name    = "AQW PT-BR Localization";
-        public const string Version = "2.2.0";
+        public const string Version = "0.1.0";
 #if TRANSLATOR
         public const string Edition = "Translator";
 #else

@@ -48,7 +48,7 @@ mesmo release, o instalador, os dois .zip e o pacote de traduções
 Para gerar tudo localmente (precisa do Inno Setup 6 para o instalador):
 
 ```bash
-powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 2026.10.19
+powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 0.1.0
 ```
 
 ## Atualizações
