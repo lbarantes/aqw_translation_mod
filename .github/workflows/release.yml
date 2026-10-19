@@ -1,14 +1,19 @@
-name: Publicar traduções
+name: Publicar release
 
-# Rodado manualmente (Actions > Publicar traduções > Run workflow).
-# Cria um Release com translations.zip + manifest.json; o mod baixa sempre
-# o mais recente (releases/latest) uma vez por sessão de jogo.
+# Rodado manualmente (Actions > Publicar release > Run workflow).
+# Cada release leva tudo junto:
+#   - AQWTranslation-Setup.exe (instalador: "só jogar" ou "ajudar a traduzir")
+#   - AQWTranslation-Player.zip / AQWTranslation-Translator.zip (instalação manual)
+#   - translations.zip + manifest.json (o mod baixa sempre o mais recente,
+#     releases/latest, uma vez por sessão de jogo)
+# Os dois últimos precisam estar em TODO release: o "latest" é sempre o mais
+# novo, e é dele que o mod tira as traduções.
 
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Versão do pacote (ex.: 2026.10.12 ou 2026.10.12.2). Deve ser maior que a anterior.'
+        description: 'Versão das traduções (ex.: 2026.10.19 ou 2026.10.19.2). Deve ser maior que a anterior.'
         required: true
       notes:
         description: 'Resumo do que mudou (opcional)'
@@ -23,22 +28,59 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Validar
+      - name: Validar traduções
         shell: powershell
         run: powershell -ExecutionPolicy Bypass -File tools/validate-translations.ps1
 
-      - name: Gerar pacote
+      - name: Instalar Inno Setup
         shell: powershell
-        run: powershell -ExecutionPolicy Bypass -File tools/make-release.ps1 -Out dist/release -Version "${{ inputs.version }}"
+        run: |
+          if (-not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Gerar release (mod, instalador e traduções)
+        id: build
+        shell: powershell
+        run: |
+          powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version "${{ inputs.version }}" -RequireInstaller
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $mod = [regex]::Match((Get-Content Plugin.cs -Raw), 'const string Version = "([^"]+)"').Groups[1].Value
+          "mod=$mod" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding ascii
 
       - name: Criar release
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ inputs.version }}
+          MOD: ${{ steps.build.outputs.mod }}
           NOTES: ${{ inputs.notes }}
         run: |
-          gh release create "translations-$VERSION" \
-            dist/release/translations.zip dist/release/manifest.json \
-            --title "Traduções $VERSION" \
-            --notes "${NOTES:-Pacote de traduções $VERSION.}"
+          cat > notes.md <<EOF
+          ${NOTES:-Mod $MOD com o pacote de traduções $VERSION.}
+
+          ## Como instalar
+
+          Baixe **AQWTranslation-Setup.exe** e execute. Ele acha a pasta do jogo pela Steam,
+          instala o BepInEx se faltar e pergunta como você vai usar o mod:
+
+          - **Só quero jogar traduzido** (padrão)
+          - **Quero ajudar a traduzir** (editor no F10 e envio de traduções ao GitHub)
+
+          Para trocar de opção, rode o instalador de novo. As traduções se atualizam sozinhas ao abrir o jogo.
+
+          O Windows pode mostrar "O Windows protegeu o computador" porque o instalador não tem
+          assinatura digital: clique em **Mais informações > Executar assim mesmo**.
+
+          **Instalação manual:** extraia **AQWTranslation-Player.zip** (só jogar) ou
+          **AQWTranslation-Translator.zip** (tradutor) dentro da pasta do jogo, a que tem o
+          \`AdventureQuest Worlds Infinity.exe\`.
+          EOF
+          gh release create "v$MOD-$VERSION" \
+            dist/release/AQWTranslation-Setup.exe \
+            dist/release/AQWTranslation-Player.zip \
+            dist/release/AQWTranslation-Translator.zip \
+            dist/release/translations.zip \
+            dist/release/manifest.json \
+            --title "AQW Translation $MOD (traduções $VERSION)" \
+            --notes-file notes.md

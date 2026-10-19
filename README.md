@@ -13,18 +13,43 @@ jogo em tempo real e se atualiza sozinho a partir deste repositório.
 
 ## Instalação
 
-Requisitos: o jogo instalado com **BepInEx 5.4.x** (Mono, 64 bits). A pasta do
-jogo precisa ter `BepInEx/` e `winhttp.dll`.
+Baixe o **[AQWTranslation-Setup.exe](https://github.com/lbarantes/aqw_translation_mod/releases/latest/download/AQWTranslation-Setup.exe)**
+do [último release](https://github.com/lbarantes/aqw_translation_mod/releases/latest)
+e execute. O instalador:
 
-1. Escolha a edição:
-   - **Player** — para quem só quer jogar traduzido.
-   - **Translator** — para quem vai traduzir e contribuir.
-2. Copie `AQWTranslation.dll` para `BepInEx/plugins/`.
-3. Abra o jogo. Na primeira vez o mod baixa as traduções sozinho (precisa de
-   internet) e cria `BepInEx/plugins/translations/`.
+- acha a pasta do jogo pela Steam (ou deixa você escolher);
+- instala o **BepInEx 5.4.23.5** se ele ainda não estiver lá (se já estiver, não mexe);
+- pergunta como você vai usar o mod:
+  - **Só quero jogar traduzido** (padrão): edição **Player**;
+  - **Quero ajudar a traduzir**: edição **Translator**, com o editor (F10) e o
+    envio de traduções ao GitHub.
 
-Só uma edição deve estar instalada por vez: trocar de Player para Translator é
-só substituir o `AQWTranslation.dll`. Configurações e traduções são mantidas.
+Abra o jogo. Na primeira vez o mod baixa as traduções sozinho (precisa de
+internet) e cria `BepInEx/plugins/translations/`.
+
+Para trocar de edição, rode o instalador de novo e escolha a outra opção.
+Configurações e traduções são mantidas. Desinstalar (em *Aplicativos
+instalados* do Windows) remove só o mod; BepInEx e traduções ficam.
+
+O Windows pode avisar "O Windows protegeu o computador", porque o instalador
+não tem assinatura digital: clique em **Mais informações > Executar assim mesmo**.
+
+**Instalação manual:** extraia `AQWTranslation-Player.zip` ou
+`AQWTranslation-Translator.zip` (do mesmo release) dentro da pasta do jogo, a
+que tem o `AdventureQuest Worlds Infinity.exe`. Os .zip já trazem o BepInEx.
+
+### Publicar um release
+
+Em **Actions > Publicar release > Run workflow**, informe a versão das
+traduções (maior que a anterior). O workflow valida as traduções e publica, no
+mesmo release, o instalador, os dois .zip e o pacote de traduções
+(`translations.zip` + `manifest.json`), que o mod usa para se atualizar.
+
+Para gerar tudo localmente (precisa do Inno Setup 6 para o instalador):
+
+```bash
+powershell -ExecutionPolicy Bypass -File tools/build-release.ps1 -Version 2026.10.19
+```
 
 ## Atualizações
 
