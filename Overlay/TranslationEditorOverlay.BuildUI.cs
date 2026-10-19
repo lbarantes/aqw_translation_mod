@@ -106,6 +106,7 @@ namespace AQWMod.Localization.Overlay
             BuildCreateNodePanel(canvasRoot);
             BuildCreateNodeDropdown(canvasRoot);
             BuildFilePicker(canvasRoot);
+            BuildDeleteFolderPanel(canvasRoot);
             BuildScanWindow(canvasRoot);
 
             LogSpriteResolutionOnce();

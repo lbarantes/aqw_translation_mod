@@ -94,6 +94,8 @@ namespace AQWMod.Localization.Overlay
             {
                 Lbl(row, node.Name, 10, FontStyle.Normal, ColWhite, 0, true);
                 Lbl(row, $"{node.EntryCount} entrada(s)", 9, FontStyle.Italic, ColGray, 90, false);
+                if (!TreeNodeOps.IsReservedRootFile(node.RelativePath))
+                    Btn(row, "Mover", 52, 20, BgIgnBtn, () => StartMoveNode(node.RelativePath, isFolder: false));
                 Btn(row, "Abrir", 56, 20, BgBtn, () => OpenFileTable(node.RelativePath));
             }
             else
@@ -111,6 +113,8 @@ namespace AQWMod.Localization.Overlay
                 Button plusBtn = null!;
                 plusBtn = Btn(row, "+", 22, 20, BgChip,
                     () => OpenCreateNodeDropdown(node.RelativePath, plusBtn.GetComponent<RectTransform>()));
+                Btn(row, "Mover", 52, 20, BgIgnBtn, () => StartMoveNode(node.RelativePath, isFolder: true));
+                Btn(row, "Excluir", 56, 20, BgClose, () => OpenDeleteFolderPanel(node.RelativePath));
             }
         }
     }

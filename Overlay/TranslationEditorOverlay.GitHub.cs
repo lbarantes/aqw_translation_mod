@@ -23,6 +23,8 @@ namespace AQWMod.Localization.Overlay
         private string? _ghLogin;
         private string _ghMessage = "";
         private DeviceCodeInfo? _ghCode;
+        // aviso ao lado do código ("copiado") — vazio quando a cópia falhou
+        private string _ghCodeCopyNote = "";
         private ChangeSet? _ghChanges;
         private PullRequestContent? _ghPr;
         private string? _ghPrUrl;
@@ -95,11 +97,11 @@ namespace AQWMod.Localization.Overlay
 
                 case GhState.WaitingApproval:
                     GhLine("1. Abra  " + _ghCode!.VerificationUri + "  no navegador (foi aberto automaticamente).");
-                    GhLine("2. Digite o código:   " + _ghCode.UserCode);
+                    GhLine("2. Cole o código (Ctrl+V):   " + _ghCode.UserCode + "   " + _ghCodeCopyNote);
                     GhLine("3. Autorize o aplicativo. Esta tela atualiza sozinha.", dim: true);
                     GhButtons(
-                        ("Abrir no navegador", 140, BgBtn, () => GhOpen(_ghCode.VerificationUri)),
-                        ("Copiar código", 110, BgChip, () => GUIUtility.systemCopyBuffer = _ghCode.UserCode),
+                        ("Copiar código", 120, BgBtn, GhCopyCode),
+                        ("Abrir no navegador", 140, BgChip, () => GhOpen(_ghCode.VerificationUri)),
                         ("Cancelar", 90, BgIgnBtn, GhCancelLogin));
                     break;
 
@@ -203,6 +205,9 @@ namespace AQWMod.Localization.Overlay
 
                 _ghCode = await flow.RequestCodeAsync(ct);
                 _ghState = GhState.WaitingApproval;
+                // já deixa o código na área de transferência antes de abrir
+                // o navegador — no site do GitHub é só colar
+                GhCopyCode();
                 GhOpen(_ghCode.VerificationUri);
                 RenderGitHub();
 
@@ -232,6 +237,20 @@ namespace AQWMod.Localization.Overlay
                 _ghMessage = "Não foi possível entrar: " + ex.Message;
                 RenderGitHub();
             }
+        }
+
+        private void GhCopyCode()
+        {
+            if (_ghCode == null) return;
+            try
+            {
+                GUIUtility.systemCopyBuffer = _ghCode.UserCode;
+                _ghCodeCopyNote = GUIUtility.systemCopyBuffer == _ghCode.UserCode
+                    ? "(copiado para a área de transferência)"
+                    : "";
+            }
+            catch { _ghCodeCopyNote = ""; }
+            RenderGitHub();
         }
 
         private void GhCancelLogin()

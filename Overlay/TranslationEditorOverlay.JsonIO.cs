@@ -17,10 +17,11 @@ using AQWMod.Localization.Translation;
 
 namespace AQWMod.Localization.Overlay
 {
-    // Leitura/escrita de uncategorized.json (via TranslationFileStore).
+    // Leitura de uncategorized.json (via TranslationFileStore). Só leitura:
+    // a GUI não grava mais tradução nele (ver NeedsDestination em Rows.cs).
     public partial class TranslationEditorOverlay
     {
-        // ReadFile/WriteFile delegam pro TranslationFileStore (JObject de
+        // ReadFile delega pro TranslationFileStore (JObject de
         // verdade), que entende tanto forma simples quanto estendida
         // ("ignore"/"context"). Um leitor de tokens manual antigo corrompia
         // silenciosamente entradas em forma de objeto, lendo campos internos
@@ -33,16 +34,6 @@ namespace AQWMod.Localization.Overlay
                     .ToDictionary(e => e.Key, e => e.Text, StringComparer.Ordinal);
             }
             catch { return new Dictionary<string, string>(StringComparer.Ordinal); }
-        }
-
-        private void WriteFile(Dictionary<string, string> dict)
-        {
-            TranslationFileStore.WriteAll(OutputFile, dict);
-
-            // força recarga das traduções e descarte do cache por componente,
-            // pra texto já visível na tela ser re-traduzido na hora
-            TranslationManager.Instance.ReloadFile(OutputFile);
-            TMPTextPatch.InvalidateSafeTranslateCache();
         }
     }
 }

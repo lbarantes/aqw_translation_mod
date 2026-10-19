@@ -100,8 +100,7 @@ namespace AQWMod.Localization.Overlay
             Button? okBtn = null;
             if (!tooLongForInline)
             {
-                okBtn = Btn(root, "OK", 32, 22, BgBtn, () =>
-                    SaveEntryRequiringDestination(row!, () => UpdateSaveAllBtn(panel)));
+                okBtn = Btn(root, "OK", 32, 22, BgBtn, () => SaveEntryRequiringDestination(panel, row!));
             }
             else
             {
@@ -204,30 +203,58 @@ namespace AQWMod.Localization.Overlay
             if (row.Root != null) ApplyRowStatus(row);
         }
 
-        // "OK" passa por aqui em vez de chamar SaveEntry direto: linha do
-        // Scan (SourceFile="") nunca mais cai direto em uncategorized.json,
-        // primeiro obriga escolher um arquivo real via OpenFilePicker. Linha
-        // que já tem SourceFile (Biblioteca/"Abrir") salva direto, sem
-        // perguntar — já está categorizada. `onSaved` é só o refresh visual
-        // leve (UpdateSaveAllBtn) que cada chamador já fazia antes.
-        private void SaveEntryRequiringDestination(EntryRow row, Action onSaved)
+        // uncategorized.json não recebe mais tradução: linha do Scan
+        // (SourceFile vazio) ou lida de uncategorized.json precisa de um
+        // arquivo real escolhido no seletor antes de gravar
+        private bool NeedsDestination(string sourceFile) =>
+            string.IsNullOrEmpty(sourceFile) || SameFile(sourceFile, OutputFile);
+
+        private static bool SameFile(string a, string b) =>
+            string.Equals(Path.GetFullPath(a), Path.GetFullPath(b), StringComparison.OrdinalIgnoreCase);
+
+        // devolve o caminho completo do destino escolhido. Se a entrada
+        // estava gravada em uncategorized.json, ela é levada junto (com
+        // context) e sai de lá — `movedOut` avisa o chamador pra recarregar a
+        // lista, a linha não pertence mais ao arquivo que a janela mostra
+        private string RelocateEntry(string oldFile, string key, string destRelPath, out bool movedOut)
+        {
+            var dest = ResolveCorpusFullPath(destRelPath);
+            movedOut = false;
+            if (string.IsNullOrEmpty(oldFile) || !File.Exists(oldFile)) return dest;
+
+            var src = TranslationFileStore.Read(oldFile).FirstOrDefault(e => e.Key == key);
+            if (src == null) return dest;
+
+            TranslationFileStore.Upsert(dest, key, src.Text, context: src.Context, ignore: src.IsIgnored);
+            TranslationFileStore.Remove(oldFile, key);
+            TranslationManager.Instance.ReloadFile(oldFile);
+            movedOut = true;
+            return dest;
+        }
+
+        // "OK" passa por aqui em vez de chamar SaveEntry direto: linha sem
+        // arquivo real (ver NeedsDestination) primeiro obriga escolher um via
+        // OpenFilePicker. Linha que já está num arquivo de categoria salva
+        // direto, sem perguntar.
+        private void SaveEntryRequiringDestination(RowListPanel panel, EntryRow row)
         {
             if (!row.IsModified) return;
             var text = row.TransFld.text; // capturado agora, ver nota em SaveEntryWithText
 
-            if (string.IsNullOrEmpty(row.SourceFile))
+            if (NeedsDestination(row.SourceFile))
             {
                 OpenFilePicker($"Onde salvar \"{Shorten(row.Original, 40)}\"?", relPath =>
                 {
-                    row.SourceFile = ResolveCorpusFullPath(relPath);
+                    row.SourceFile = RelocateEntry(row.SourceFile, row.Original, relPath, out var movedOut);
                     SaveEntryWithText(row, text);
-                    onSaved();
+                    UpdateSaveAllBtn(panel);
+                    if (movedOut) panel.RefreshList();
                 });
                 return;
             }
 
             SaveEntryWithText(row, text);
-            onSaved();
+            UpdateSaveAllBtn(panel);
         }
 
         private void SaveAll(RowListPanel panel)
@@ -235,31 +262,37 @@ namespace AQWMod.Localization.Overlay
             var modified = panel.Rows.Where(r => r.IsModified).ToList();
             if (modified.Count == 0) return;
 
-            var toIngameEdits = modified.Where(r => string.IsNullOrEmpty(r.SourceFile)).ToList();
-            if (toIngameEdits.Count > 0)
-            {
-                var dict = ReadFile();
-                foreach (var row in toIngameEdits)
-                    dict[row.Original] = row.TransFld.text;
-                WriteFile(dict);
-            }
-
-            var toFiles = modified.Where(r => !string.IsNullOrEmpty(r.SourceFile)).ToList();
+            var toFiles = modified.Where(r => !NeedsDestination(r.SourceFile)).ToList();
             foreach (var row in toFiles)
             {
                 TranslationFileStore.Upsert(row.SourceFile, row.Original, row.TransFld.text);
                 TranslationManager.Instance.ReloadFile(row.SourceFile);
-            }
-            if (toFiles.Count > 0)
-                TMPTextPatch.InvalidateSafeTranslateCache();
-
-            foreach (var row in modified)
-            {
                 row.Saved              = row.TransFld.text;
                 panel.Buffers[row.Original] = row.TransFld.text;
                 ApplyRowStatus(row);
             }
+            if (toFiles.Count > 0)
+                TMPTextPatch.InvalidateSafeTranslateCache();
             UpdateSaveAllBtn(panel);
+
+            // as sem arquivo real vão todas pro mesmo destino, escolhido uma
+            // vez só; texto capturado agora (ver nota em SaveEntryWithText)
+            var pending = modified.Where(r => NeedsDestination(r.SourceFile))
+                                  .Select(r => (Row: r, Text: r.TransFld.text)).ToList();
+            if (pending.Count == 0) return;
+
+            OpenFilePicker($"Onde salvar {pending.Count} tradução(ões) sem arquivo?", relPath =>
+            {
+                bool anyMovedOut = false;
+                foreach (var (row, text) in pending)
+                {
+                    row.SourceFile = RelocateEntry(row.SourceFile, row.Original, relPath, out var movedOut);
+                    anyMovedOut |= movedOut;
+                    SaveEntryWithText(row, text);
+                }
+                UpdateSaveAllBtn(panel);
+                if (anyMovedOut) panel.RefreshList();
+            });
         }
 
         private static void ApplyRowStatus(EntryRow row)

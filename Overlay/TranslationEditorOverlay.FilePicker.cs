@@ -35,6 +35,11 @@ namespace AQWMod.Localization.Overlay
         // pra quem devolver o arquivo escolhido — null enquanto o painel
         // está fechado
         private Action<string>? _pickerOnFileSelected;
+        // modo pasta (Mover arquivo/pasta da árvore): arquivos somem da
+        // lista e cada pasta, mais a raiz, ganha o "Selecionar"
+        private bool _pickerFolderMode;
+        private GameObject _pickerRootSelectBtn = null!;
+        private GameObject _pickerRootNewFileBtn = null!;
 
         private void BuildFilePicker(RectTransform canvasRoot)
         {
@@ -73,8 +78,10 @@ namespace AQWMod.Localization.Overlay
             var rootRow = HRow(_pickerPanel, (int)rootRowH, Bg);
             Btn(rootRow, "+ Pasta", 62, 22, BgChip, () =>
                 OpenCreateNodePanel("", isFolder: true, onCreated: OnPickerNodeCreated));
-            Btn(rootRow, "+ Arquivo", 74, 22, BgChip, () =>
-                OpenCreateNodePanel("", isFolder: false, onCreated: OnPickerNodeCreated));
+            _pickerRootNewFileBtn = Btn(rootRow, "+ Arquivo", 74, 22, BgChip, () =>
+                OpenCreateNodePanel("", isFolder: false, onCreated: OnPickerNodeCreated)).gameObject;
+            Lbl(rootRow, "", 9, FontStyle.Normal, ColGray, 0, true);
+            _pickerRootSelectBtn = Btn(rootRow, "Selecionar raiz", 120, 22, BgBtn, () => PickerSelect("")).gameObject;
 
             const float vPad = 6 + 6, vSpacing = 2 * 4; // padding + 4 vãos (hdr/frow/rootRow/scroll/foot)
             float scrollH = windowH - vPad - vSpacing - hdrH - filterRowH - rootRowH - footH;
@@ -86,8 +93,18 @@ namespace AQWMod.Localization.Overlay
             _pickerPanel.SetActive(false);
         }
 
-        private void OpenFilePicker(string title, Action<string> onFileSelected)
+        private void OpenFilePicker(string title, Action<string> onFileSelected) =>
+            OpenPicker(title, onFileSelected, folderMode: false);
+
+        // devolve o caminho relativo da pasta escolhida ("" = raiz)
+        private void OpenFolderPicker(string title, Action<string> onFolderSelected) =>
+            OpenPicker(title, onFolderSelected, folderMode: true);
+
+        private void OpenPicker(string title, Action<string> onFileSelected, bool folderMode)
         {
+            _pickerFolderMode        = folderMode;
+            _pickerRootSelectBtn.SetActive(folderMode);
+            _pickerRootNewFileBtn.SetActive(!folderMode);
             _pickerTitle.text        = title;
             _pickerOnFileSelected    = onFileSelected;
             _pickerFilterInput.text  = "";
@@ -96,6 +113,13 @@ namespace AQWMod.Localization.Overlay
 
             _pickerPanel.transform.SetAsLastSibling();
             _pickerPanel.SetActive(true);
+        }
+
+        private void PickerSelect(string relPath)
+        {
+            var cb = _pickerOnFileSelected;
+            CloseFilePicker();
+            cb?.Invoke(relPath);
         }
 
         private void CloseFilePicker()
@@ -113,11 +137,13 @@ namespace AQWMod.Localization.Overlay
                 _pickerExpandedFolders.Add(relPath);
                 DoFilePickerTree();
             }
+            else if (!_pickerFolderMode)
+            {
+                PickerSelect(relPath);
+            }
             else
             {
-                var cb = _pickerOnFileSelected;
-                CloseFilePicker();
-                cb?.Invoke(relPath);
+                DoFilePickerTree();
             }
         }
 
@@ -132,6 +158,8 @@ namespace AQWMod.Localization.Overlay
             var query     = _pickerFilterInput.text;
             bool filtering = !string.IsNullOrWhiteSpace(query);
             if (filtering) root = FileTreeBuilder.Filter(root, query);
+            // uncategorized.json não recebe mais tradução — nunca é destino
+            root.Children.RemoveAll(c => c.IsFile && TreeNodeOps.IsReservedRootFile(c.RelativePath));
 
             if (root.Children.Count == 0)
             {
@@ -148,6 +176,7 @@ namespace AQWMod.Localization.Overlay
         {
             foreach (var child in node.Children)
             {
+                if (_pickerFolderMode && child.IsFile) continue;
                 BuildFilePickerRow(child, depth, forceExpand);
                 if (!child.IsFile && (forceExpand || _pickerExpandedFolders.Contains(child.RelativePath)))
                     BuildFilePickerRows(child, depth + 1, forceExpand);
@@ -164,12 +193,7 @@ namespace AQWMod.Localization.Overlay
             {
                 Lbl(row, node.Name, 10, FontStyle.Normal, ColWhite, 0, true);
                 Lbl(row, $"{node.EntryCount}", 9, FontStyle.Italic, ColGray, 34, false);
-                Btn(row, "Selecionar", 84, 20, BgBtn, () =>
-                {
-                    var cb = _pickerOnFileSelected;
-                    CloseFilePicker();
-                    cb?.Invoke(node.RelativePath);
-                });
+                Btn(row, "Selecionar", 84, 20, BgBtn, () => PickerSelect(node.RelativePath));
             }
             else
             {
@@ -184,6 +208,8 @@ namespace AQWMod.Localization.Overlay
                 Button plusBtn = null!;
                 plusBtn = Btn(row, "+", 22, 20, BgChip, () =>
                     OpenCreateNodeDropdown(node.RelativePath, plusBtn.GetComponent<RectTransform>(), OnPickerNodeCreated));
+                if (_pickerFolderMode)
+                    Btn(row, "Selecionar", 84, 20, BgBtn, () => PickerSelect(node.RelativePath));
             }
         }
     }

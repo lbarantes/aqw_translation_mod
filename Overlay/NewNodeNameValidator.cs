@@ -55,6 +55,11 @@ namespace AQWMod.Localization.Overlay
                 name += ".json";
 
             normalizedRelativePath = CombineRelative(parentRelPath, name);
+            if (TreeNodeOps.IsReservedRootFile(normalizedRelativePath))
+            {
+                normalizedRelativePath = "";
+                return $"\"{name}\" é um nome reservado na raiz de translations/.";
+            }
             return null;
         }
 

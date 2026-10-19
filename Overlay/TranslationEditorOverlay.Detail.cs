@@ -180,17 +180,19 @@ namespace AQWMod.Localization.Overlay
             _detailRow.TransFld.text = text;
 
             // mesma regra do "OK" da linha (SaveEntryRequiringDestination):
-            // linha do Scan nunca cai direto em uncategorized.json, precisa
+            // linha sem arquivo real (Scan ou uncategorized.json) precisa
             // escolher um arquivo primeiro. "Trad. avançada" é o único jeito
             // de salvar texto muito longo (o "OK" inline some nesse caso),
             // então esta gate precisa existir aqui também.
-            if (string.IsNullOrEmpty(_detailRow.SourceFile))
+            if (NeedsDestination(_detailRow.SourceFile))
             {
                 var row = _detailRow;
                 OpenFilePicker($"Onde salvar \"{Shorten(row.Original, 40)}\"?", relPath =>
                 {
-                    row.SourceFile = ResolveCorpusFullPath(relPath);
+                    row.SourceFile = RelocateEntry(row.SourceFile, row.Original, relPath, out var movedOut);
+                    var panel = _detailSourcePanel;
                     FinishSaveFromDetail(row, text);
+                    if (movedOut) panel?.RefreshList();
                 });
                 return;
             }
@@ -211,6 +213,15 @@ namespace AQWMod.Localization.Overlay
             // a gravação em disco acima já aconteceu de qualquer forma
             if (row.Root != null) ApplyRowStatus(row);
             if (_detailSourcePanel != null) UpdateSaveAllBtn(_detailSourcePanel);
+
+            // já traduzida, não há mais o que fazer aqui — fecha a tradução
+            // avançada (só se ainda for a mesma linha aberta: o seletor pode
+            // ter ficado aberto enquanto o usuário abria outra)
+            if (_detailRow == row)
+            {
+                _detailPanel.SetActive(false);
+                _detailRow = null;
+            }
         }
 
         // traduz só a entrada aberta no momento e preenche o campo — não

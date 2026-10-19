@@ -61,7 +61,14 @@ namespace AQWMod.Localization.Overlay
             InputBlockerPatch.ExtraBlockedPanels.Remove(rt);
             if (_moveSourcePanel == win.Panel) _moveSourcePanel = null;
             if (_autoPreviewSourcePanel == win.Panel) _autoPreviewSourcePanel = null;
-            if (_detailSourcePanel == win.Panel) _detailSourcePanel = null;
+            if (_detailSourcePanel == win.Panel)
+            {
+                // a tradução avançada aberta é de uma linha desta janela —
+                // salvar depois de fechada gravaria no caminho antigo
+                _detailSourcePanel = null;
+                _detailRow = null;
+                if (_detailPanel != null) _detailPanel.SetActive(false);
+            }
 
             Destroy(win.Root);
             _openFileTables.Remove(relativePath);

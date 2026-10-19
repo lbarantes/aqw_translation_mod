@@ -249,35 +249,50 @@ namespace AQWMod.Localization.Overlay
             var panel = _autoPreviewSourcePanel;
             if (panel == null) { CloseAutoPreview(); return; }
 
-            int applied = 0;
-            foreach (var pr in _autoPreviewRows)
-            {
-                if (!pr.Checked || pr.Suspicious) continue;
+            var toApply = _autoPreviewRows.Where(pr => pr.Checked && !pr.Suspicious).ToList();
+            int needDest = toApply.Count(pr => NeedsDestination(pr.SourceFile));
+            if (needDest == 0) { ApplyAutoPreviewRows(panel, toApply, null); return; }
 
-                if (string.IsNullOrEmpty(pr.SourceFile))
+            // uncategorized.json não recebe mais tradução: as linhas sem
+            // arquivo real vão todas pro arquivo escolhido aqui
+            OpenFilePicker($"Onde salvar {needDest} tradução(ões) automática(s)?", relPath =>
+            {
+                if (!_autoPreviewPanel.activeSelf) return; // pré-visualização fechada enquanto escolhia
+                ApplyAutoPreviewRows(panel, toApply, relPath);
+            });
+        }
+
+        private void ApplyAutoPreviewRows(RowListPanel panel, List<AutoPreviewRow> toApply, string? destRelPath)
+        {
+            int applied = 0;
+            bool anyMovedOut = false;
+            foreach (var pr in toApply)
+            {
+                var row = panel.Rows.FirstOrDefault(r =>
+                    r.Original == pr.OriginalKey && r.SourceFile == pr.SourceFile);
+
+                var file = pr.SourceFile;
+                if (NeedsDestination(file))
                 {
-                    var dict = ReadFile();
-                    dict[pr.OriginalKey] = pr.ProposedText;
-                    WriteFile(dict);
+                    if (destRelPath == null) continue;
+                    file = RelocateEntry(file, pr.OriginalKey, destRelPath, out var movedOut);
+                    anyMovedOut |= movedOut;
                 }
-                else
-                {
-                    TranslationFileStore.Upsert(pr.SourceFile, pr.OriginalKey, pr.ProposedText, source: "auto");
-                    TranslationManager.Instance.ReloadFile(pr.SourceFile);
-                }
+
+                TranslationFileStore.Upsert(file, pr.OriginalKey, pr.ProposedText, source: "auto");
+                TranslationManager.Instance.ReloadFile(file);
 
                 // desmarca — já foi aplicada, não deve continuar marcada pro
                 // próximo Auto Traduzir sem o usuário pedir de novo
                 panel.Selection.Remove(pr.SourceFile, pr.OriginalKey);
 
-                var row = panel.Rows.FirstOrDefault(r =>
-                    r.Original == pr.OriginalKey && r.SourceFile == pr.SourceFile);
                 if (row != null)
                 {
+                    SetRowSelected(panel, row, false);
+                    row.SourceFile         = file;
                     row.TransFld.text      = pr.ProposedText;
                     row.Saved              = pr.ProposedText;
                     panel.Buffers[row.Original] = pr.ProposedText;
-                    SetRowSelected(panel, row, false);
                     ApplyRowStatus(row);
                 }
 
@@ -292,6 +307,7 @@ namespace AQWMod.Localization.Overlay
 
             panel.StatsLabel.text = $"Auto Tradução: {applied} entrada(s) aplicada(s).";
             CloseAutoPreview();
+            if (anyMovedOut) panel.RefreshList();
         }
 
         private void CloseAutoPreview()

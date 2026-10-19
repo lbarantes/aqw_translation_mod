@@ -57,13 +57,20 @@ Enabled = false
 Aperte **F10** no jogo para abrir o editor: navegue pelos arquivos, edite, veja
 os textos detectados na tela e salve. As alterações valem na hora (hot reload).
 
+Na árvore, cada arquivo e pasta tem **Mover** (escolha a pasta de destino) e
+cada pasta tem **Excluir**, com confirmação dupla: confirmar e depois digitar o
+nome da pasta. A pasta excluída vai para `translations/_trash/`, de onde dá
+para recuperar à mão.
+
 Para contribuir com o repositório:
 
 1. Coloque as suas traduções em um arquivo de categoria (`ui/`, `maps/`,
-   `skills/`...). O editor tem **Mover/Copiar** para tirar entradas do
-   `uncategorized.json`.
-2. No editor, abra a aba **GitHub** e clique em **Entrar com GitHub**. Anote o
-   código mostrado, aprove no navegador e volte ao jogo.
+   `skills/`...). O `uncategorized.json` não recebe mais traduções: ao salvar
+   um texto sem arquivo, o editor pede o destino. Entradas antigas dele saem
+   com **Mover** ou ao serem salvas de novo.
+2. No editor, abra a aba **GitHub** e clique em **Entrar com GitHub**. O
+   código já vai para a área de transferência (há também **Copiar código**):
+   cole no navegador, aprove e volte ao jogo.
 3. Clique em **Revisar alterações**. O mod mostra exatamente o que será
    publicado: título, resumo por categoria, pontos de atenção e a lista das
    entradas.
