@@ -4,7 +4,8 @@
     "Go to Quest": "Ir para Quest",
     "Next Quest": "Próxima Quest",
     "Quest Objectives": "Objetivos da Quest",
-    "Item already exists in your bank!": "Você já possui esse item no banco!"
+    "Item already exists in your bank!": "Você já possui esse item no banco!",
+    "Request": "Solicitação"
   },
   "$meta": {
     "schemaVersion": "2.0"

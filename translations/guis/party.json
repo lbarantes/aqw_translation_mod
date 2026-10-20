@@ -1,0 +1,11 @@
+{
+  "translations": {
+    "Out of range": "Muito longe",
+    "Summon Request": "Estão te chamando",
+    "{player} is requesting you. Travel to them?": "{player} está te chamando para ir até ele. Deseja ir?",
+    "Travel": "Ir"
+  },
+  "$meta": {
+    "schemaVersion": "2.0"
+  }
+}
