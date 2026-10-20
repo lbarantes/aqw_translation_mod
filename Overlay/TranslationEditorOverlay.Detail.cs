@@ -79,9 +79,12 @@ namespace AQWMod.Localization.Overlay
             _detailOrigFld.readOnly      = true;
 
             // Hint label
-            var hintRow = HRow(_detailPanel, 16, Bg);
-            Lbl(hintRow, "Placeholders:  {player} = username   {n1},{n2},… = numeros",
-                9, FontStyle.Italic, ColGray, 0, true);
+            // nome de jogador que o mod não reconheceu sozinho (sem '_', ex.:
+            // "pittureca has invited you..."): seleciona o nome no Original e
+            // troca por {player} na chave — vale pra qualquer jogador depois
+            var hintRow = HRow(_detailPanel, 20, Bg);
+            _detailHintLbl = Lbl(hintRow, DetailHintDefault, 9, FontStyle.Italic, ColGray, 0, true);
+            Btn(hintRow, "Seleção → {player}", 120, 18, BgIgnBtn, MarkSelectionAsPlayer);
 
             // Translation label
             var th = HRow(_detailPanel, 18, BgHdr);
@@ -151,6 +154,10 @@ namespace AQWMod.Localization.Overlay
             // armazenado), para o tradutor não ver nem digitar "\n".
             _detailTransFld.text = ToEditable(row.TransFld.text);
             _lastTransCaret      = _detailTransFld.text.Length;
+            _lastOrigSelection   = "";
+            _detailKeyOverride   = null;
+            _detailHintLbl.text  = DetailHintDefault;
+            _detailHintLbl.color = ColGray;
             // fica acima das janelas de arquivo e do Scan (criadas depois
             // deste painel, por isso desenhavam por cima) — abaixo só de Mover/seletor
             _detailPanel.transform.SetAsLastSibling();
@@ -179,6 +186,9 @@ namespace AQWMod.Localization.Overlay
             // salva direto, sem checar IsModified — o usuário clicou "Salvar" explicitamente
             _detailRow.TransFld.text = text;
 
+            var newKey = _detailKeyOverride != null && _detailKeyOverride != _detailRow.Original
+                ? _detailKeyOverride : null;
+
             // mesma regra do "OK" da linha (SaveEntryRequiringDestination):
             // linha sem arquivo real (Scan ou uncategorized.json) precisa
             // escolher um arquivo primeiro. "Trad. avançada" é o único jeito
@@ -187,21 +197,43 @@ namespace AQWMod.Localization.Overlay
             if (NeedsDestination(_detailRow.SourceFile))
             {
                 var row = _detailRow;
-                OpenFilePicker($"Onde salvar \"{Shorten(row.Original, 40)}\"?", relPath =>
+                OpenFilePicker($"Onde salvar \"{Shorten(newKey ?? row.Original, 40)}\"?", relPath =>
                 {
-                    row.SourceFile = RelocateEntry(row.SourceFile, row.Original, relPath, out var movedOut);
+                    // com troca de chave, a entrada antiga (literal com o
+                    // nome) não é levada junto — FinishSaveFromDetail apaga ela
+                    bool movedOut = false;
+                    row.SourceFile = newKey != null
+                        ? ResolveCorpusFullPath(relPath)
+                        : RelocateEntry(row.SourceFile, row.Original, relPath, out movedOut);
                     var panel = _detailSourcePanel;
-                    FinishSaveFromDetail(row, text);
-                    if (movedOut) panel?.RefreshList();
+                    FinishSaveFromDetail(row, text, newKey);
+                    if (movedOut || newKey != null) panel?.RefreshList();
                 });
                 return;
             }
 
-            FinishSaveFromDetail(_detailRow, text);
+            var srcPanel = _detailSourcePanel;
+            FinishSaveFromDetail(_detailRow, text, newKey);
+            if (newKey != null) srcPanel?.RefreshList();
         }
 
-        private void FinishSaveFromDetail(EntryRow row, string text)
+        private void FinishSaveFromDetail(EntryRow row, string text, string? newKey = null)
         {
+            if (newKey != null)
+            {
+                // a chave literal ("pittureca has invited...") sai de onde
+                // estiver gravada: arquivo da linha e uncategorized.json
+                foreach (var f in new[] { row.SourceFile, OutputFile })
+                {
+                    if (string.IsNullOrEmpty(f) || !File.Exists(f)) continue;
+                    if (!TranslationFileStore.Read(f).Any(e => e.Key == row.Original)) continue;
+                    TranslationFileStore.Remove(f, row.Original);
+                    TranslationManager.Instance.ReloadFile(f);
+                }
+                _buffers.Remove(row.Original);
+                row.Original = newKey;
+            }
+
             TranslationFileStore.Upsert(row.SourceFile, row.Original, text);
             TranslationManager.Instance.ReloadFile(row.SourceFile);
             TMPTextPatch.InvalidateSafeTranslateCache();
@@ -311,6 +343,37 @@ namespace AQWMod.Localization.Overlay
         private static string FromEditable(string s)
             => string.IsNullOrEmpty(s) ? s
                : s.Replace("\r\n", "\\n").Replace("\n", "\\n").Replace("\r", "\\n");
+
+        private const string DetailHintDefault =
+            "{player} = jogador  {n1},{n2} = números  · nome não detectado? selecione-o no Original →";
+
+        // troca o trecho selecionado no Original (nome de outro jogador) por
+        // {player}/{player2}… na chave e na tradução. Só vale no Salvar: a
+        // entrada literal com o nome é apagada e a do molde gravada no lugar
+        private void MarkSelectionAsPlayer()
+        {
+            if (_detailRow == null) return;
+
+            var name = _lastOrigSelection.Trim();
+            var key  = _detailKeyOverride ?? _detailRow.Original;
+            if (name.Length < 2 || name.Contains("{") || key.IndexOf(name, StringComparison.Ordinal) < 0)
+            {
+                _detailHintLbl.text  = "Selecione (arraste) o nome do jogador no Original e clique de novo.";
+                _detailHintLbl.color = ColMiss;
+                return;
+            }
+
+            int n = 1;
+            while (key.Contains(n == 1 ? "{player}" : $"{{player{n}}}")) n++;
+            var ph = n == 1 ? "{player}" : $"{{player{n}}}";
+
+            _detailKeyOverride   = key.Replace(name, ph);
+            _detailTransFld.text = (_detailTransFld.text ?? "").Replace(name, ph);
+            _lastOrigSelection   = "";
+
+            _detailHintLbl.text  = $"Chave ao salvar: {Shorten(_detailKeyOverride, 70)}";
+            _detailHintLbl.color = ColOK;
+        }
 
         // insere o token na posição do cursor e deixa o cursor logo depois
         // dele, sem nada selecionado. A correção do caret é feita via patch

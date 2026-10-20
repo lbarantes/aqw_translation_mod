@@ -158,6 +158,13 @@ namespace AQWMod.Localization.Overlay
         // usada pelos botões de placeholder pra inserir o token no ponto
         // certo (ao clicar num botão o campo perde o foco)
         private int         _lastTransCaret = 0;
+        // mesmo truque pro campo Original: último trecho selecionado, usado
+        // pelo botão "Seleção → {player}" (o clique tira o foco do campo)
+        private string      _lastOrigSelection = "";
+        // chave com o nome do jogador trocado por {player}; null = sem troca,
+        // salva na chave da própria linha
+        private string?     _detailKeyOverride;
+        private Text        _detailHintLbl = null!;
 
         private GameObject   _autoPreviewPanel  = null!;
         private RectTransform _autoPreviewList  = null!;
@@ -324,6 +331,15 @@ namespace AQWMod.Localization.Overlay
                 if (_detailPanel != null && _detailPanel.activeSelf
                     && _detailTransFld != null && _detailTransFld.isFocused)
                     _lastTransCaret = _detailTransFld.caretPosition;
+
+                if (_detailPanel != null && _detailPanel.activeSelf
+                    && _detailOrigFld != null && _detailOrigFld.isFocused)
+                {
+                    var txt = _detailOrigFld.text ?? "";
+                    int a = Mathf.Clamp(Mathf.Min(_detailOrigFld.selectionAnchorPosition, _detailOrigFld.selectionFocusPosition), 0, txt.Length);
+                    int b = Mathf.Clamp(Mathf.Max(_detailOrigFld.selectionAnchorPosition, _detailOrigFld.selectionFocusPosition), 0, txt.Length);
+                    if (b > a) _lastOrigSelection = txt.Substring(a, b - a);
+                }
             }
 
             // captura contínua, sempre, desacoplada da exibição: roda mesmo

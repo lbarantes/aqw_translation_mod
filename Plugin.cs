@@ -57,6 +57,9 @@ namespace AQWMod.Localization
 #endif
                 TMPTextPatch.LoadNpcNames(translationsPath); // npc_names.json (opcional)
 
+                // moldes {player} saem das chaves carregadas, remonta a cada recarga
+                TranslationManager.Instance.OnTranslationsReloaded += TMPTextPatch.InvalidatePlayerTemplates;
+
                 // TranslationManager não conhece TMPTextPatch diretamente (evita
                 // dependência circular Core -> Interceptors), então quem recarrega
                 // npc_names.json é o Plugin, que já referencia os dois

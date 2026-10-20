@@ -91,6 +91,36 @@ namespace AQWMod.Localization.Interceptors
         internal static readonly Dictionary<string, string> KnownNpcNames =
             new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
+        // moldes com {player} pra nome que a normalização não reconhece (sem
+        // '_' e fora do mapa, ex.: quem te convida pra party). Remontado sob
+        // demanda depois de qualquer recarga de tradução (Plugin.cs)
+        private static readonly PlayerTemplateIndex PlayerTemplates = new PlayerTemplateIndex();
+        private static bool _playerTemplatesDirty = true;
+
+        internal static void InvalidatePlayerTemplates() => _playerTemplatesDirty = true;
+
+        /// <summary>
+        /// Só quando a chave normalizada não tem entrada própria (tradução
+        /// literal sempre vence): tenta encaixar o texto num molde com {player}.
+        /// </summary>
+        internal static bool TryMatchPlayerTemplate(
+            string keyBase, string lookupKey, string? context, out PlayerTemplateIndex.Match match)
+        {
+            match = default;
+            var repo = TranslationManager.Instance.Repository;
+            if (repo == null) return false;
+
+            if (_playerTemplatesDirty)
+            {
+                PlayerTemplates.Rebuild(repo.Index.SourceFile.Keys);
+                _playerTemplatesDirty = false;
+            }
+            if (PlayerTemplates.Count == 0) return false;
+            if (repo.TryGet(lookupKey, context, out _)) return false;
+
+            return PlayerTemplates.TryMatch(keyBase, out match);
+        }
+
         internal static void LoadNpcNames(string translationsRootPath)
         {
             KnownNpcNames.Clear();
@@ -296,6 +326,31 @@ namespace AQWMod.Localization.Interceptors
                 var step2     = NormalizeNumbers(step1,   out var capturedNums);
                 var lookupKey = NormalizeMaps(step2,      out var capturedMaps);
 
+                // nome que a cadeia não reconheceu, mas cabe num molde
+                // "{player} has invited you..." cadastrado: o molde vira a chave
+                if (TryMatchPlayerTemplate(keyBase, lookupKey, inferredContext, out var pm))
+                {
+                    CaptureHook.Record(pm.TemplateKey, original,
+                        inferredContext, GetPath(component),
+                        pm.Players, pm.Numbers, null,
+                        Time.realtimeSinceStartup, "tmp");
+
+                    var pPath     = ComponentPathCache.GetOrBuild(component);
+                    var pTemplate = TranslationManager.Instance.Translate(
+                        pm.TemplateKey, new TranslationContext(pm.TemplateKey, pPath, context: inferredContext));
+                    if (pTemplate == pm.TemplateKey) return original; // ignorada
+
+                    var pResult = pm.Fill(pTemplate);
+                    if (pResult != original)
+                    {
+                        var pe = OriginalTracker.GetOrCreateValue(component);
+                        pe.Value      = original;
+                        pe.Category   = inferredContext;
+                        pe.Translated = pResult;
+                    }
+                    return pResult;
+                }
+
                 // push pro overlay (captura cutscene/texto transiente).
                 // Append/update-only: registrar a mesma chave duas vezes só
                 // atualiza LastSeen/SeenCount, nunca duplica
@@ -419,6 +474,13 @@ namespace AQWMod.Localization.Interceptors
                 var step1     = NormalizeUsernamePlaceholders(keyBase, out var players);
                 var step2     = NormalizeNumbers(step1,   out var nums);
                 var lookupKey = NormalizeMaps(step2,      out var maps);
+
+                if (TryMatchPlayerTemplate(keyBase, lookupKey, inferredContext, out var pm))
+                {
+                    var pTemplate = TranslationManager.Instance.Translate(
+                        pm.TemplateKey, new TranslationContext(pm.TemplateKey, path, context: inferredContext));
+                    return pTemplate == pm.TemplateKey ? original : pm.Fill(pTemplate);
+                }
 
                 var result = TranslationManager.Instance.Translate(
                     lookupKey, new TranslationContext(lookupKey, path, context: inferredContext));

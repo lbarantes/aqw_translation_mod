@@ -260,6 +260,14 @@ namespace AQWMod.Localization.Overlay
             var key   = TMPTextPatch.NormalizeMaps(step2, out var maps);
             if (string.IsNullOrWhiteSpace(key) || key.Length < 2) return;
 
+            // nome sem '_' que cabe num molde {player}: lista mostra o molde
+            if (TMPTextPatch.TryMatchPlayerTemplate(stripped, key, null, out var pm))
+            {
+                CaptureRegistry.Record(pm.TemplateKey, rawText, cat, PathOf(t, typeName),
+                    pm.Players, pm.Numbers, null, now, source);
+                return;
+            }
+
             CaptureRegistry.Record(key, rawText, cat, PathOf(t, typeName),
                 players, nums, maps, now, source);
         }
@@ -326,7 +334,8 @@ namespace AQWMod.Localization.Overlay
             var step2 = TMPTextPatch.NormalizeNumbers(step1, out _);
             var key   = TMPTextPatch.NormalizeMaps(step2, out _);
             if (string.IsNullOrWhiteSpace(key) || key.Length < 2) return;
-            set.Add(key);
+            set.Add(TMPTextPatch.TryMatchPlayerTemplate(stripped, key, null, out var pm)
+                ? pm.TemplateKey : key);
         }
 
         private void RefreshVisibility(RowListPanel panel)

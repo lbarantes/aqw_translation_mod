@@ -181,7 +181,11 @@ Cada arquivo:
 Uma entrada é um texto ou um objeto com `text`, `context` (para desambiguar a
 mesma palavra em lugares diferentes) e `ignore` (não traduzir). Placeholders
 como `{player}`, `{n1}` e `{map}` precisam aparecer na tradução do mesmo jeito
-que no original. A documentação técnica completa está em [`docs/`](docs/).
+que no original. Nome com `_` vira `{player}` sozinho; nome de outro jogador
+sem `_` (ex.: `pittureca has invited you to join a party!`) é reconhecido
+quando existe uma chave com `{player}` no lugar dele — no editor avançado,
+selecione o nome no Original e clique em **Seleção → {player}** antes de
+salvar. A documentação técnica completa está em [`docs/`](docs/).
 
 ## Desenvolvimento
 
