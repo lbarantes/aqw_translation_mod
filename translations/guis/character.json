@@ -1,4 +1,4 @@
-﻿{
+{
   "Power": "Poder",
   "Strength": "Força",
   "Intellect": "Intelecto",
@@ -11,5 +11,18 @@
   "Guild": "Guilda",
   "Friends": "Amigos",
   "Reputations": "Reputações",
-  "Ignore List": "Lista negra"
+  "Ignore List": "Lista negra",
+  "Add Friend": "Adicionar Amigo",
+  "Inspect Player": "Inspecionar Jogador",
+  "Invite to Party": "Convidar para Grupo",
+  "Report": "Denunciar",
+  "Hide Cape": "Esconder Capa",
+  "Hide Pet": "Esconder Pet",
+  "Kick": "Expulsar do Grupo",
+  "Promote": "Promover a lider",
+  "GoTo": "Ir até jogador",
+  "Summon": "Chamar jogador",
+  "Remove Friend": "Remover amizade",
+  "{player} has invited you to join a party!": "{player} te convidou para entrar no grupo!",
+  "Accept friend request from {player}?": "Aceitar pedido de amizade de {player}?"
 }
