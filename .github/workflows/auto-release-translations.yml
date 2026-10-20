@@ -52,14 +52,22 @@ jobs:
           $version = $parts -join '.'
           Write-Host "Release anterior: $prev -> novo: v$version"
 
-          # instalador, .zip e minModVersion iguais aos do release anterior
+          # instalador, .zip, DLLs, seção "mod" e minModVersion iguais aos do release anterior
           New-Item -ItemType Directory -Force dist/prev, dist/release | Out-Null
           gh release download $prev --repo $repo -D dist/prev -p 'AQWTranslation-*' -p 'manifest.json'
           if ($LASTEXITCODE -ne 0) { throw "Falha ao baixar os arquivos de $prev" }
-          $minMod = (Get-Content dist/prev/manifest.json -Raw | ConvertFrom-Json).minModVersion
+          $prevManifest = Get-Content dist/prev/manifest.json -Raw | ConvertFrom-Json
+          $minMod = $prevManifest.minModVersion
           if (-not $minMod) { throw "manifest.json de $prev sem minModVersion" }
 
-          powershell -ExecutionPolicy Bypass -File tools/make-release.ps1 -Out dist/release -Version $version -MinModVersion $minMod
+          # a seção "mod" (DLLs + assinatura feita no PC do autor) passa adiante
+          # sem mudança: as DLLs copiadas são as mesmas que ela assina
+          $makeArgs = @('-Out', 'dist/release', '-Version', $version, '-MinModVersion', $minMod)
+          if ($prevManifest.mod) {
+            [IO.File]::WriteAllText("$PWD/dist/mod.json", ($prevManifest.mod | ConvertTo-Json -Depth 5), (New-Object Text.UTF8Encoding($false)))
+            $makeArgs += @('-ModInfoFile', 'dist/mod.json')
+          }
+          powershell -ExecutionPolicy Bypass -File tools/make-release.ps1 @makeArgs
           if ($LASTEXITCODE -ne 0) { throw 'Falha ao gerar o pacote de traducoes' }
           Copy-Item dist/prev/AQWTranslation-* dist/release/
 

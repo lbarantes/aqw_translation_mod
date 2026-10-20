@@ -2,6 +2,8 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using AQWMod.Localization.Core;
+using AQWMod.Localization.Notifications;
+using AQWMod.Localization.Repository;
 
 namespace AQWMod.Localization.Sync
 {
@@ -13,7 +15,7 @@ namespace AQWMod.Localization.Sync
     {
         private static int _started;
 
-        public static void StartOnce(string translationsPath, string modVersion)
+        public static void StartOnce(string translationsPath, string modVersion, string dllPath, string edition)
         {
             if (Interlocked.Exchange(ref _started, 1) == 1) return;
             if (!ModConfig.UpdatesEnabled.Value)
@@ -30,11 +32,23 @@ namespace AQWMod.Localization.Sync
                     using var source = new HttpReleaseSource(repo, "AQWTranslation/" + modVersion);
                     using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(3));
 
-                    var result = await UpdateCoordinator.RunAsync(
-                        new UpdateOptions { LocalRoot = translationsPath, ModVersion = modVersion },
-                        source, cts.Token).ConfigureAwait(false);
+                    var options = new UpdateOptions { LocalRoot = translationsPath, ModVersion = modVersion };
+                    if (ModConfig.UpdatesModAutoUpdate.Value)
+                        options.Mod = new ModUpdateOptions { DllPath = dllPath, Edition = edition };
+
+                    var result = await UpdateCoordinator.RunAsync(options, source, cts.Token).ConfigureAwait(false);
 
                     Log(result);
+                    if (ModConfig.UpdatesShowPopup.Value)
+                    {
+                        var translations = UpdateSummary.TranslationsLine(result);
+                        var mod = UpdateSummary.ModStagedLine(result);
+                        UnityMainThreadDispatcher.Enqueue(() =>
+                        {
+                            UpdatePopup.Show(translations);
+                            UpdatePopup.Show(mod);
+                        });
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -50,6 +64,15 @@ namespace AQWMod.Localization.Sync
                 Plugin.Log.LogWarning(line);
             else
                 Plugin.Log.LogInfo(line);
+
+            if (r.ModUpdate != null && r.ModUpdate.Status != ModUpdateStatus.NotOffered)
+            {
+                var modLine = $"[AQWTranslation][Update] Mod {r.ModUpdate.Status}: {r.ModUpdate.Message}";
+                if (r.ModUpdate.Status == ModUpdateStatus.Rejected || r.ModUpdate.Status == ModUpdateStatus.Failed)
+                    Plugin.Log.LogWarning(modLine);
+                else
+                    Plugin.Log.LogInfo(modLine);
+            }
 
             if (r.Report == null) return;
             foreach (var w in r.Report.Warnings)

@@ -24,6 +24,8 @@ namespace AQWMod.Localization.Sync
         public string? LocalVersion { get; set; }
         public string? RemoteVersion { get; set; }
         public SyncReport? Report { get; set; }
+        /// <summary>Resultado da atualização do próprio mod (null = não foi tentada).</summary>
+        public ModUpdateResult? ModUpdate { get; set; }
         public string Message { get; set; } = "";
     }
 
@@ -33,11 +35,14 @@ namespace AQWMod.Localization.Sync
         public string ModVersion { get; set; } = "0";
         public int BackupsToKeep { get; set; } = 3;
         public SyncLimits Limits { get; set; } = new SyncLimits();
+        /// <summary>Se definido, também atualiza a DLL do mod quando o release trouxer uma versão nova.</summary>
+        public ModUpdateOptions? Mod { get; set; }
     }
 
     // Um ciclo completo de atualização:
-    //   manifesto → compara versões → baixa → confere sha256 → extrai pra staging
-    //   → SyncEngine (merge 3-way, com backup) → limpa staging.
+    //   manifesto → (opcional) DLL do mod via ModUpdater → compara versões →
+    //   baixa → confere sha256 → extrai pra staging → SyncEngine (merge 3-way,
+    //   com backup) → limpa staging.
     // Nunca lança: todo erro vira UpdateResult, o jogo segue com o que tem (offline-first).
     public static class UpdateCoordinator
     {
@@ -46,6 +51,7 @@ namespace AQWMod.Localization.Sync
             var result = new UpdateResult();
             var syncDir = Path.Combine(opt.LocalRoot, SyncEngine.StateFolder);
             var staging = Path.Combine(syncDir, "staging");
+            var modStaging = Path.Combine(syncDir, "staging_mod");
 
             try
             {
@@ -57,7 +63,17 @@ namespace AQWMod.Localization.Sync
                     return Done(result, UpdateStatus.Failed, "manifesto inválido: " + error);
                 result.RemoteVersion = manifest.PackageVersion.Raw;
 
-                // 2) compatibilidade e versão
+                // 2) o próprio mod, antes das traduções: se o pacote novo
+                // exigir um mod mais novo (minModVersion), a DLL já fica
+                // trocada e as traduções entram na próxima abertura
+                if (opt.Mod != null)
+                {
+                    TryDelete(modStaging);
+                    result.ModUpdate = await ModUpdater.RunAsync(opt.Mod, manifest, opt.ModVersion, source, modStaging, ct)
+                                                       .ConfigureAwait(false);
+                }
+
+                // 3) compatibilidade e versão
                 if (manifest.MinModVersion != null &&
                     PackageVersion.TryParse(opt.ModVersion, out var mod) &&
                     mod.CompareTo(manifest.MinModVersion) < 0)
@@ -70,7 +86,7 @@ namespace AQWMod.Localization.Sync
                     return Done(result, UpdateStatus.UpToDate,
                         $"traduções já na versão {local} (remoto: {manifest.PackageVersion}).");
 
-                // 3) baixa e confere
+                // 4) baixa e confere
                 ct.ThrowIfCancellationRequested();
                 ResetDir(staging);
                 var zipPath = Path.Combine(staging, "package.zip");
@@ -80,7 +96,7 @@ namespace AQWMod.Localization.Sync
                 var pkgDir = Path.Combine(staging, "pkg");
                 PackageExtractor.ExtractVerified(zipPath, manifest, pkgDir, opt.Limits);
 
-                // 4) merge
+                // 5) merge
                 var backupRoot = Path.Combine(syncDir, "backup", DateTime.Now.ToString("yyyyMMdd_HHmmss"));
                 var report = SyncEngine.Apply(new SyncOptions
                 {
@@ -119,6 +135,7 @@ namespace AQWMod.Localization.Sync
             finally
             {
                 TryDelete(staging);
+                TryDelete(modStaging);
             }
         }
 

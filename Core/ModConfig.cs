@@ -42,6 +42,8 @@ namespace AQWMod.Localization.Core
         // atualização automática de traduções a partir de um release do GitHub
         public static ConfigEntry<bool>   UpdatesEnabled    { get; private set; } = null!;
         public static ConfigEntry<string> UpdatesRepository { get; private set; } = null!;
+        public static ConfigEntry<bool>   UpdatesModAutoUpdate { get; private set; } = null!;
+        public static ConfigEntry<bool>   UpdatesShowPopup  { get; private set; } = null!;
 
         public static void Initialize(ConfigFile config)
         {
@@ -104,6 +106,15 @@ namespace AQWMod.Localization.Core
             UpdatesRepository = config.Bind(
                 "Updates", "Repository", "lbarantes/aqw_translation_mod",
                 "Repositório GitHub (dono/repo) de onde vêm os releases de tradução.");
+
+            UpdatesModAutoUpdate = config.Bind(
+                "Updates", "ModAutoUpdate", true,
+                "Também atualiza o próprio mod (a DLL) quando sair uma versão nova. Só aceita " +
+                "DLL assinada pelo autor; a versão nova passa a valer na próxima vez que o jogo abrir.");
+
+            UpdatesShowPopup = config.Bind(
+                "Updates", "ShowPopup", true,
+                "Mostra um aviso no jogo quando o mod ou as traduções forem atualizados.");
 
 #if TRANSLATOR
             AutoTranslateEnabled = config.Bind(

@@ -7,7 +7,8 @@
 #
 # Precisa: GitHub CLI com login feito uma vez (gh auth login) e Inno Setup 6.
 # O release (tag v<versao>) aponta pro commit atual, que precisa ja estar no
-# GitHub. Leva instalador, os dois .zip e o pacote de traducoes.
+# GitHub. Leva instalador, os dois .zip, as DLLs avulsas (auto-update do
+# mod, assinadas) e o pacote de traducoes.
 # (Arquivo em ASCII de proposito: o PowerShell 5 le scripts sem BOM como ANSI.)
 
 param(
@@ -51,7 +52,8 @@ if (Test-Native { & $gh release view "v$Version" --repo $Repo }) { throw "O rele
 $global:LASTEXITCODE = 0
 & (Join-Path $PSScriptRoot 'validate-translations.ps1')
 if ($LASTEXITCODE -ne 0) { throw 'Validacao das traducoes falhou.' }
-& (Join-Path $PSScriptRoot 'build-release.ps1') -Version $Version -RequireInstaller
+# -RequireSignature: release de codigo sem assinatura nao atualizaria o mod dos jogadores
+& (Join-Path $PSScriptRoot 'build-release.ps1') -Version $Version -RequireInstaller -RequireSignature
 
 $modVersion = [regex]::Match((Get-Content Plugin.cs -Raw), 'const string Version = "([^"]+)"').Groups[1].Value
 if (-not $Notes) { $Notes = "Mod $modVersion com o pacote de traducoes $Version." }
@@ -59,14 +61,10 @@ $template  = Get-Content (Join-Path $PSScriptRoot 'release-notes.md') -Raw -Enco
 $notesFile = Join-Path $root 'dist\release-notes.md'
 [IO.File]::WriteAllText($notesFile, $template.Replace('{{NOTES}}', $Notes), (New-Object Text.UTF8Encoding($false)))
 
-$out = Join-Path $root 'dist\release'
+# instalador, .zip, DLLs avulsas, translations.zip e manifest.json
+$assets = Get-ChildItem (Join-Path $root 'dist\release') -File | ForEach-Object { $_.FullName }
 & $gh release create "v$Version" --repo $Repo --target $head `
-    --title "AQW Translation $Version" --notes-file $notesFile `
-    (Join-Path $out 'AQWTranslation-Setup.exe') `
-    (Join-Path $out 'AQWTranslation-Player.zip') `
-    (Join-Path $out 'AQWTranslation-Translator.zip') `
-    (Join-Path $out 'translations.zip') `
-    (Join-Path $out 'manifest.json')
+    --title "AQW Translation $Version" --notes-file $notesFile @assets
 if ($LASTEXITCODE -ne 0) { throw 'Falha ao criar o release.' }
 
 Write-Host "Publicado: https://github.com/$Repo/releases/tag/v$Version" -ForegroundColor Green

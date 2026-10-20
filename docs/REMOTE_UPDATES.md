@@ -39,9 +39,15 @@ sequenceDiagram
 
 ## 2. Regras inegociáveis
 
-1. **Nunca baixa nem executa código.** Só arquivos de dados
-   (`*.json` dentro de `translations/`, mais o `_manifest.json`). Nenhum
-   `.dll`, `.exe`, script, ou qualquer coisa que não seja JSON de tradução.
+1. **Código só com assinatura.** O pacote de traduções traz só dados
+   (`*.json` dentro de `translations/`). A única exceção é a DLL do próprio
+   mod (seção `"mod"` do manifesto, `Sync/ModUpdater.cs`): ela só é baixada se
+   a assinatura RSA da seção conferir com a chave pública embutida no mod
+   (`ModSignature.PublicKeyXml`), e só é instalada se o arquivo bater em
+   tamanho e SHA-256 com o que foi assinado. A chave privada fica no PC de
+   quem publica (`tools/new-signing-key.ps1`), nunca no GitHub — quem só
+   controla o repositório ou o release não consegue publicar código. Nenhum
+   `.exe` ou script é baixado ou executado.
 2. **Nunca bloqueia o início do jogo.** Toda a checagem/download roda em
    background (mesma disciplina de thread do resto do mod: trabalho de
    rede fora da main thread, resultado aplicado via
@@ -83,6 +89,30 @@ remoto exigir um recurso de schema que a DLL instalada ainda não entende —
 nesse caso, o mod ignora o manifesto e segue local, nunca tenta "adivinhar"),
 `sha256`+`sizeBytes` por arquivo (integridade e um limite de tamanho barato
 de checar antes mesmo de calcular hash).
+
+### Seção `"mod"` (atualização da DLL)
+
+```json
+"mod": {
+  "version": "0.2.0",
+  "editions": {
+    "Player":     { "name": "AQWTranslation-Player.dll",     "sha256": "…", "sizeBytes": 99328 },
+    "Translator": { "name": "AQWTranslation-Translator.dll", "sha256": "…", "sizeBytes": 302080 }
+  },
+  "signature": "<base64>"
+}
+```
+
+A assinatura (RSA PKCS#1 v1.5 + SHA-256) cobre o texto
+`ModRelease.SignedPayload`: versão e nome/sha256/tamanho de cada edição. Ela é
+gerada por `tools/sign-mod-release.ps1` no `build-release.ps1`; o workflow
+automático de traduções repassa a seção sem mudança, junto com as mesmas DLLs.
+Seção ausente ou inválida não afeta as traduções — só não atualiza o mod.
+
+A DLL carregada não fica travada (o Mono lê o arquivo inteiro pra memória),
+então a troca acontece na hora: atual → `.old`, nova no lugar. A versão nova
+roda na próxima abertura do jogo, que apaga o `.old` e mostra o aviso "o mod
+foi atualizado" (`_sync/mod_state.json` guarda a última versão que rodou).
 
 ## 4. Segurança
 

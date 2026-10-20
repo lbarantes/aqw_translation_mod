@@ -58,8 +58,15 @@ O script valida as traduções, compila as duas edições, gera o instalador e
 os .zip (com o BepInEx) e o pacote de traduções, e cria o release `v0.2.0`
 com tudo junto. A versão precisa ser maior que a anterior.
 
+Antes, suba a versão em `Plugin.cs` (`PluginInfo.Version`): é ela que os
+mods instalados comparam para decidir se se atualizam.
+
 Precisa, uma vez: GitHub CLI com login (`winget install GitHub.cli` e
-`gh auth login`) e Inno Setup 6 (`winget install JRSoftware.InnoSetup`).
+`gh auth login`), Inno Setup 6 (`winget install JRSoftware.InnoSetup`) e a
+chave de assinatura (`tools/new-signing-key.ps1`, que grava a chave privada em
+`%APPDATA%\AQWTranslation\release-signing-key.xml`). **Guarde um backup dessa
+chave**: sem ela não dá para publicar versão nova do mod que as instalações
+aceitem, e quem a tiver consegue publicar uma DLL que todos instalam.
 Para só gerar os arquivos em `dist/release`, sem publicar, use
 `tools/build-release.ps1 -Version 0.2.0`.
 
@@ -79,14 +86,31 @@ procura um novo release deste repositório e aplica as diferenças.
     então o jogo continua mostrando a sua).
 - Antes de alterar qualquer arquivo, o mod copia a versão anterior para
   `translations/_sync/backup/` (as 3 últimas atualizações ficam guardadas).
-- Só chegam arquivos de dados (`.json`). Nunca código. O pacote é conferido por
-  tamanho e SHA-256, e qualquer divergência cancela a atualização inteira.
+- O pacote de traduções é conferido por tamanho e SHA-256, e qualquer
+  divergência cancela a atualização inteira.
 
-Para desligar, em `BepInEx/config/com.aqwmod.localization.cfg`:
+**O próprio mod também se atualiza.** Quando o release traz uma versão nova
+do mod, ele baixa a DLL da mesma edição que você usa (Player ou Translator) e
+a troca na hora; a versão nova passa a valer na próxima vez que o jogo abrir.
+Só é aceita uma DLL **assinada** pelo autor do mod: a assinatura é conferida
+com uma chave embutida no mod antes de qualquer download, e o arquivo baixado
+precisa bater em tamanho e SHA-256 com o que foi assinado. A versão anterior
+fica como `AQWTranslation.dll.old` até a próxima abertura.
+
+Quando algo é atualizado, aparece um aviso no topo da tela dizendo o que
+mudou, por exemplo: *"Traduções atualizadas para a versão 0.2.3: 121 novas e
+4 atualizadas."* ou *"O mod foi atualizado: versão 0.2.0 → 0.3.0."*
+
+Para mudar, em `BepInEx/config/com.aqwmod.localization.cfg`:
 
 ```ini
 [Updates]
+# nenhuma atualização automática
 Enabled = false
+# só traduções, sem trocar a DLL do mod
+ModAutoUpdate = false
+# sem o aviso na tela
+ShowPopup = false
 ```
 
 ## Editor e envio de traduções (edição Translator)

@@ -14,7 +14,10 @@ param(
     [string]$Source = '',
     [string]$Out = '',
     [string]$Version = '',
-    [string]$MinModVersion = '0.1.0'
+    [string]$MinModVersion = '0.1.0',
+    # secao "mod" ja assinada (tools/sign-mod-release.ps1); sem ela o release
+    # so atualiza traducoes
+    [string]$ModInfoFile = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -86,6 +89,9 @@ $manifest = [ordered]@{
         sizeBytes = $zipInfo.Length
     }
     files          = @($files | ForEach-Object { [ordered]@{ path = $_.path; sha256 = $_.sha256; sizeBytes = $_.sizeBytes } })
+}
+if ($ModInfoFile) {
+    $manifest['mod'] = [IO.File]::ReadAllText((Resolve-Path $ModInfoFile).Path) | ConvertFrom-Json
 }
 [IO.File]::WriteAllText($manifestPath, ($manifest | ConvertTo-Json -Depth 6), $utf8)
 

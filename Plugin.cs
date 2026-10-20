@@ -8,7 +8,9 @@ using TMPro;
 using UnityEngine;
 using AQWMod.Localization.Core;
 using AQWMod.Localization.Interceptors;
+using AQWMod.Localization.Notifications;
 using AQWMod.Localization.Repository;
+using AQWMod.Localization.Sync;
 #if TRANSLATOR
 using AQWMod.Localization.Capture;
 using AQWMod.Localization.Overlay;
@@ -65,8 +67,20 @@ namespace AQWMod.Localization
                     Logger.LogInfo("[AQWTranslation] npc_names.json recarregado.");
                 };
 
+                // DLL anterior deixada pela última atualização do mod, e o
+                // aviso "o mod foi atualizado" na primeira abertura com a nova
+                var dllPath = Info.Location;
+                ModUpdater.CleanupPrevious(dllPath);
+                var previousMod = ModVersionTracker.RecordAndGetPrevious(
+                    Path.Combine(translationsPath, SyncEngine.StateFolder), PluginInfo.Version);
+                if (previousMod != null && ModConfig.UpdatesShowPopup.Value &&
+                    PackageVersion.TryParse(previousMod, out var prev) &&
+                    PackageVersion.TryParse(PluginInfo.Version, out var cur) && cur.CompareTo(prev) > 0)
+                    UnityMainThreadDispatcher.Enqueue(() =>
+                        UpdatePopup.Show(UpdateSummary.ModUpdatedLine(previousMod, PluginInfo.Version)));
+
                 // checagem de atualização em segundo plano (1x por sessão, nunca bloqueia)
-                AQWMod.Localization.Sync.UpdateRunner.StartOnce(translationsPath, PluginInfo.Version);
+                UpdateRunner.StartOnce(translationsPath, PluginInfo.Version, dllPath, PluginInfo.Edition);
 
                 _harmony = new Harmony(PluginInfo.GUID);
                 RegisterPatches();
@@ -244,7 +258,7 @@ namespace AQWMod.Localization
     {
         public const string GUID    = "com.aqwmod.localization";
         public const string Name    = "AQW PT-BR Localization";
-        public const string Version = "0.1.0";
+        public const string Version = "0.2.0";
 #if TRANSLATOR
         public const string Edition = "Translator";
 #else

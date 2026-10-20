@@ -140,5 +140,42 @@ namespace AQWMod.Localization.Tests
             var (m, _, _) = Release(real);
             Assert.NotEmpty(m.Files);
         }
+
+        // tools/sign-mod-release.ps1 monta o texto assinado à mão; se ele
+        // divergir de ModRelease.SignedPayload, todo jogador recusaria a
+        // atualização do mod — só apareceria depois do release publicado
+        [Fact]
+        public void SignedModSection_IsAcceptedByTheMod()
+        {
+            var repo = FindRepoRoot();
+            Assert.NotNull(repo);
+
+            using var rsa = new System.Security.Cryptography.RSACryptoServiceProvider(2048);
+            var keyPath = Path.Combine(_root, "key.xml");
+            File.WriteAllText(keyPath, rsa.ToXmlString(true));
+            var player = Path.Combine(_root, "player.dll");
+            var translator = Path.Combine(_root, "translator.dll");
+            File.WriteAllBytes(player, new byte[] { 1, 2, 3 });
+            File.WriteAllBytes(translator, new byte[] { 4, 5, 6, 7 });
+            var modJson = Path.Combine(_root, "mod.json");
+
+            var (exit, output) = RunScript(Path.Combine(repo!, "tools", "sign-mod-release.ps1"),
+                "-Version", "0.2.0", "-PlayerDll", player, "-TranslatorDll", translator, "-Out", modJson, "-KeyPath", keyPath);
+            Assert.True(exit == 0, output);
+
+            var src = Path.Combine(_root, "src");
+            Put(src, "ui/hud.json", "{\"translations\":{\"Play\":\"Jogar\"}}");
+            var outDir = Path.Combine(_root, "out");
+            (exit, output) = RunScript(Path.Combine(repo!, "tools", "make-release.ps1"),
+                "-Source", src, "-Out", outDir, "-Version", "0.2.0", "-ModInfoFile", modJson);
+            Assert.True(exit == 0, output);
+
+            Assert.True(RemoteManifest.TryParse(File.ReadAllText(Path.Combine(outDir, "manifest.json")),
+                new SyncLimits(), out var m, out var err), err);
+            Assert.NotNull(m.Mod);
+            Assert.Equal("0.2.0", m.Mod!.Version.Raw);
+            Assert.Equal(4, m.Mod.Editions["Translator"].SizeBytes);
+            Assert.True(m.Mod.VerifySignature(rsa.ToXmlString(false)));
+        }
     }
 }

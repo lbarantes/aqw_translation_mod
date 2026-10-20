@@ -79,11 +79,14 @@ namespace AQWMod.Localization.Tests
             return Task.FromResult(ManifestJson!);
         }
 
+        /// <summary>Outros assets do release (ex.: DLL do mod), por nome.</summary>
+        public Dictionary<string, string> Assets { get; } = new Dictionary<string, string>();
+
         public Task DownloadPackageAsync(string packageName, string destFile, long maxBytes, CancellationToken ct)
         {
             DownloadCalls++;
             Directory.CreateDirectory(Path.GetDirectoryName(destFile)!);
-            File.Copy(ZipPath!, destFile, true);
+            File.Copy(Assets.TryGetValue(packageName, out var asset) ? asset : ZipPath!, destFile, true);
             return Task.CompletedTask;
         }
     }

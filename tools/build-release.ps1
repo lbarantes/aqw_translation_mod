@@ -2,7 +2,12 @@
 #   AQWTranslation-Setup.exe         instalador (escolhe Player ou Translator)
 #   AQWTranslation-Player.zip        instalacao manual, so jogar
 #   AQWTranslation-Translator.zip    instalacao manual, com o editor
-#   translations.zip + manifest.json pacote de traducoes (auto-update do mod)
+#   AQWTranslation-Player.dll        DLL avulsa de cada edicao, que o mod ja
+#   AQWTranslation-Translator.dll    instalado baixa sozinho pra se atualizar
+#   translations.zip + manifest.json pacote de traducoes + secao "mod" assinada
+#
+# A secao "mod" e assinada com a chave de tools/new-signing-key.ps1. Sem a
+# chave, o release sai sem ela (so traducoes); com -RequireSignature isso e erro.
 #
 # Os .zip e o instalador trazem o BepInEx 5.4.23.5 (baixado do release
 # oficial e conferido por SHA-256). O instalador so e gerado se o Inno
@@ -15,7 +20,9 @@
 param(
     [string]$Version = '',
     [string]$Iscc = '',
-    [switch]$RequireInstaller
+    [switch]$RequireInstaller,
+    [string]$SigningKey = (Join-Path $env:APPDATA 'AQWTranslation\release-signing-key.xml'),
+    [switch]$RequireSignature
 )
 
 $ErrorActionPreference = 'Stop'
@@ -42,9 +49,22 @@ foreach ($ed in 'Player', 'Translator') {
     Copy-Item "dist\$ed\AQWTranslation.dll" (Join-Path $staging $ed) -Force
 }
 
-# 2. pacote de traducoes
+# 2. DLLs avulsas + secao "mod" assinada, depois o pacote de traducoes
+foreach ($ed in 'Player', 'Translator') {
+    Copy-Item (Join-Path $staging "$ed\AQWTranslation.dll") (Join-Path $out "AQWTranslation-$ed.dll") -Force
+}
 $makeArgs = @{ Out = $out }
 if ($Version) { $makeArgs.Version = $Version }
+if (Test-Path $SigningKey) {
+    $modInfo = Join-Path $staging 'mod.json'
+    & (Join-Path $PSScriptRoot 'sign-mod-release.ps1') -Version $modVersion -KeyPath $SigningKey -Out $modInfo `
+        -PlayerDll (Join-Path $out 'AQWTranslation-Player.dll') -TranslatorDll (Join-Path $out 'AQWTranslation-Translator.dll')
+    $makeArgs.ModInfoFile = $modInfo
+} elseif ($RequireSignature) {
+    throw "Chave de assinatura nao encontrada em $SigningKey (tools\new-signing-key.ps1)."
+} else {
+    Write-Host 'AVISO: sem chave de assinatura; o release nao vai atualizar o mod sozinho.' -ForegroundColor Yellow
+}
 & (Join-Path $PSScriptRoot 'make-release.ps1') @makeArgs
 
 # 3. BepInEx oficial, conferido por hash

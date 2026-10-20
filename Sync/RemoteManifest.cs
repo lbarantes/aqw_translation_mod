@@ -46,6 +46,10 @@ namespace AQWMod.Localization.Sync
         public string PackageSha256 { get; private set; } = "";
         public long PackageSizeBytes { get; private set; }
         public IReadOnlyList<ManifestFile> Files { get; private set; } = new List<ManifestFile>();
+        /// <summary>Atualização do próprio mod (seção opcional "mod"); null se ausente ou inválida.</summary>
+        public ModRelease? Mod { get; private set; }
+        /// <summary>Por que a seção "mod" foi ignorada (só quando ela existe e é inválida).</summary>
+        public string? ModError { get; private set; }
 
         public static bool TryParse(string json, SyncLimits limits, out RemoteManifest manifest, out string error)
         {
@@ -98,8 +102,19 @@ namespace AQWMod.Localization.Sync
                     files.Add(new ManifestFile { Path = path, Sha256 = sha.ToLowerInvariant(), SizeBytes = size });
                 }
 
+                // seção "mod" inválida não derruba as traduções: só não atualiza o mod
+                ModRelease? mod = null;
+                string? modError = null;
+                if (root["mod"] is JObject modNode && !ModRelease.TryParse(modNode, out mod, out var whyMod))
+                {
+                    mod = null;
+                    modError = whyMod;
+                }
+
                 manifest = new RemoteManifest
                 {
+                    Mod              = mod,
+                    ModError         = modError,
                     SchemaVersion    = SupportedSchemaVersion,
                     PackageVersion   = pv,
                     MinModVersion    = minMod,
