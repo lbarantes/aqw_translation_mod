@@ -188,7 +188,8 @@
     "May all your nightmares come true!": "Que todos os seus pesadelos se tornem realidade!",
     "Be sure to get lots of caaaandy!": "Certifique-se de conseguir muuuuitos doces!",
     "You saved Mogloween {player}!  Using the magic in the pumpkin spice in the air, we just opened a portal to AQWorld's ORIGINAL Mystcroft for you! \r\n\r\nMyx can now take you to a surprise bonus area... talk to him and go there!": "Você salvou o Mogloween, {player}!  Usando a magia do tempero de abóbora no ar, acabamos de abrir um portal para o Mystcroft ORIGINAL da AQWorld para você! \\n\\nMyx agora pode levá-lo para uma área de bônus surpresa... fale com ele e vá lá!",
-    "Goto Mogloween {n1}": "Ir para Mogloween de {n1}"
+    "Goto Mogloween {n1}": "Ir para Mogloween de {n1}",
+    "Daily and weekly tasks give extra rewards.": "Tarefas diárias e semanais dão recompensas extras."
   },
   "$meta": {
     "schemaVersion": "2.0"
