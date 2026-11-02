@@ -1,0 +1,12 @@
+{
+  "translations": {
+    "Never share your password with anyone.": "Nunca compartilhe sua senha com ninguém.",
+    "Use /setemote to put your favorite emotes on the Custom Emote keys.": "Use /setemote para colocar seus emotes favoritos em teclas personalizadas.",
+    "You can hide other players' capes and pets in Options.": "Você pode esconder as capas e os pets de outros jogadores nas Configurações.",
+    "Click the quest tracker to see the details of your quest.": "Clique no rastreador de missões para ver os detalhes da sua missão.",
+    "You can change your key bindings in Options.": "Você pode alterar suas associações de teclas nas Configurações."
+  },
+  "$meta": {
+    "schemaVersion": "2.0"
+  }
+}
