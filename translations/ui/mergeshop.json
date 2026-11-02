@@ -1,0 +1,9 @@
+{
+  "translations": {
+    "Required Items": "Itens necessários",
+    "More Items Required": "Estão faltando itens"
+  },
+  "$meta": {
+    "schemaVersion": "2.0"
+  }
+}

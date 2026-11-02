@@ -1,6 +1,7 @@
 {
   "translations": {
-    "Keep >": "Manter"
+    "Keep >": "Manter",
+    "Already owned in bank": "Você já tem esse item no banco"
   },
   "$meta": {
     "schemaVersion": "2.0"
