@@ -1,4 +1,4 @@
-﻿{
+{
   "translations": {
     "+DRAGONBANE": "+ RUÍNA DO DRAGÃO",
     "-DRAGONBANE": "- RUÍNA DO DRAGÃO",
@@ -14,7 +14,8 @@
     "+BLEEDING": "+ SANGRANDO",
     "+DETERMINED": "+ DETERMINADO",
     "+STUNNED": "+ ATORDOADO",
-    "+WEAKENED": "+ ENFRAQUECIDO"
+    "+WEAKENED": "+ ENFRAQUECIDO",
+    "{n1}s Cooldown\n\nThrust forward, pulling hit targets towards you and inflicting them with Bleeding, a {n2} second DoT. Gain {n3} Determination upon striking an enemy.\r\n\r\nDetermined: Heals you for {n4}% of your max HP, plus an amount based on your END & WIS.": "<color=#fc7f49>6s</color> Cooldown\\n\\nAvance puxando os alvos atingidos em sua direção e causando sangramento - um dano contínuo de 3 segundos. Ganhe <color=#b6b6b6>10 de Determinação</color> ao acertar um inimigo.\\n\\nEnquanto estiver determinado: Cure em 15% da sua vida máxima com um bônus baseado na sua RESITÊNCIA e SABEDORIA"
   },
   "$meta": {
     "schemaVersion": "2.0"

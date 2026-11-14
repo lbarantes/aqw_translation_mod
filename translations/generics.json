@@ -7,7 +7,9 @@
     "Item already exists in your bank!": "Você já possui esse item no banco!",
     "Request": "Solicitação",
     "HAPPY MOGLOWEEN!! Get the spooky new Android & Steam versions at www.AQ{n1}D.com": "FELIZ MOGLOWEEN!!! Aproveite o evento nas versões de Android e da Steam em www.AQ2D.com",
-    "Type /help in chat to see the commands you can use.": "Digite /help no chat e veja os comandos que você pode usar."
+    "Type /help in chat to see the commands you can use.": "Digite /help no chat e veja os comandos que você pode usar.",
+    "ALPHA ENDS SOON!\nThank you for support Infinity and for being brave and crazy enough to join us Alpha testing! The game is now stable enouigh that we are preparing to begin the Closed-Beta phase. Check www.AQ.com for the latest news. \n\nNew Intro\nTest the story, cutscenes, and combat of our remastered version of the original AQWorlds intro. \n\nClasses\nThe {n1} base classes have been remastered. Instead of having two separate version of Warrior, there is now one version which has a blend of classic and Infinity-only skills. \n\n• Improved Warrior Class\n• Improved Mage Class\n• Improved Rogue Class\n• Improved Healer Class\n• Infinity Hero Class (NEW!)\n* Pirate class coming next.\n\nYou can get them from the Class Shop to test.\n\nTalk to the NPCs in town to go to the newest adventures.\n\nKnown Bugs/Issues\n• Bugs? Hah! We never have any of those....\n• But just in case we do, I will add them here for you.": "dasdsadsadas",
+    "Happy Mogloween {player}! There is a talking Cauldron in town who will take you haunted place. Before you go, get the Infinity Hero Class from the Founder and above KS Shops.": "<color=#000000>Feliz Mogloween {player}! Há um Caldeirão falante na cidade que o levará a um lugar assombrado. Antes de ir, obtenha a Classe Herói <b>Infinito</b> do Fundador e acima das Lojas KS. </color>"
   },
   "$meta": {
     "schemaVersion": "2.0"
