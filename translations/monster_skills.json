@@ -1,0 +1,9 @@
+{
+  "translations": {
+    "+ROOTED, CANNOT MOVE": "+ENRAIZADO, NÃO PODE SE MOVER",
+    "-ROOTED, CANNOT MOVE": "- ENRAIZADO, NÃO PODE SE MOVER"
+  },
+  "$meta": {
+    "schemaVersion": "2.0"
+  }
+}

@@ -1,4 +1,4 @@
-﻿{
+{
   "$meta": {
     "version": "1.0.0",
     "locale": "pt-BR",
@@ -121,6 +121,9 @@
     "Common": "Comum",
     "Uncommon": "Incomum",
     "Special": "Especial",
-    "Alpha Test": "Teste Alfa"
+    "Alpha Test": "Teste Alfa",
+    "Star Sword Quest!": "Missão da Star Sword!",
+    "Hold to skip": "Pressione para pular",
+    "Hold to Skip": "Pressione para pular"
   }
 }
